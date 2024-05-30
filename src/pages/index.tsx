@@ -5,22 +5,45 @@ import Connectbutton from "@/components/thirdweb/ConnectButton";
 import Balance from "@/components/thirdweb/BalanceOf";
 import NavBar from "@/components/navbar";
 import Hero from "@/components/home/hero";
-import { ReactElement } from "react";
+import { ReactElement, useEffect } from "react";
 import Layout from "@/components/layout";
 import { Network } from "@/network";
+import useStore from "@/store/store";
+import useNetwork from "@/hooks/useNetwork";
 
 const inter = Inter({ subsets: ["latin"] });
 
-(async () => {
-  let network = new Network();
-  console.log("starting network");
-  await network.init();
-})();
+// (async () => {
+//   let network = new Network();
+//   console.log("starting network");
+//   await network.init();
+//   console.log("network started");
+//   console.log("network", network);
+//   console.log("network string:", network.libp2p.peerId.toString());
+//   console.log("network CID:", network.libp2p.peerId.toCID());
+// })();
 
 const Home = () => {
+
+  const { loading, peerId } = useNetwork();
+
   return (
-    <div className=" flex flex-col items-center justify-center bg-gray-100 p-4">
-      <Hero />
+    <div className="flex flex-col items-center justify-center bg-gray-100 p-4">
+    
+        <>
+          <Hero />
+          {loading ? (
+        <>
+        <div className="w-48 h-48 bg-gray-500 animate-pulse"></div>
+        <p>
+        Loading...
+        </p>
+        </>
+      ) : (
+          <p>Peer ID: {peerId}</p>
+          )}
+        </>
+
     </div>
   );
 };
