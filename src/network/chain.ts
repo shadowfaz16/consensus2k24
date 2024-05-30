@@ -9,6 +9,7 @@ export type Data = GenesisBlock;
 export type GenesisBlock = {
   key: PublicKey;
 };
+
 export type BaseBlock = {
   root: CID<unknown, 113, 18, 1> | null;
   parent: CID<unknown, 113, 18, 1> | null;
@@ -26,12 +27,77 @@ async function cid(bytes: Uint8Array): Promise<CID> {
 
 export class ChainStore {
   blockstore: IDBBlockstore | null = null;
+  metadata: IDBDatabase | null = null;
   static async init() {
     let self = new ChainStore();
     const store = new IDBBlockstore("blocks");
     await store.open();
+    const metadata = indexedDB.open("metadata", 1);
+    self.metadata = await new Promise((resolve, reject) => {
+      metadata.onerror = (event) => {
+        reject(`Database error: ${metadata.error}`);
+      };
+
+      metadata.onsuccess = (event) => {
+        resolve(metadata.result);
+      };
+
+      metadata.onupgradeneeded = (event) => {
+        self.metadata = metadata.result;
+        if (!self.metadata.objectStoreNames.contains("roots")) {
+          self.metadata.createObjectStore("roots", { keyPath: "id" });
+        }
+        if (!self.metadata.objectStoreNames.contains("keys")) {
+          self.metadata.createObjectStore("keys", { keyPath: "key" });
+        }
+      };
+    });
     self.blockstore = store;
     db = self;
+  }
+  static async putRoots(roots: CID[]) {
+    let operation = db?.metadata
+      ?.transaction("roots", "readwrite")
+      .objectStore("roots")
+      .put({ id: "roots", roots: roots.map((root) => root.bytes) });
+    if (!operation) {
+      throw new Error("no metadata db");
+    }
+    return await new Promise((resolve, reject) => {
+      operation.onsuccess = () => {
+        resolve(null);
+      };
+
+      operation.onerror = () => {
+        reject(`Add data error: ${operation.error}`);
+      };
+    });
+  }
+  static async roots(): Promise<CID[]> {
+    let operation = db?.metadata
+      ?.transaction("roots")
+      .objectStore("roots")
+      .get("roots");
+    if (!operation) {
+      throw new Error("no metadata db");
+    }
+    let result = (await new Promise((resolve, reject) => {
+      operation.onsuccess = () => {
+        if (operation.result == null) {
+          resolve([]);
+        } else {
+          resolve(operation.result.roots as Uint8Array[]);
+        }
+      };
+
+      operation.onerror = () => {
+        reject();
+      };
+    })) as Uint8Array[];
+    return result.map((root) => {
+      let [cid] = CID.decodeFirst(root);
+      return cid;
+    });
   }
   static ready() {
     if (db == null) {
@@ -76,6 +142,11 @@ export class ChainStore {
     } as BaseBlock;
     ChainStore.ready();
     await db?.blockstore?.put(address, signed);
+    if (block.root == null) {
+      let roots = await this.roots();
+      roots.push(block.cid);
+      await this.putRoots(roots);
+    }
     return block;
   }
   static async get(address: CID): Promise<BaseBlock | undefined> {
@@ -94,7 +165,6 @@ export class ChainStore {
       let [parent] = CID.decodeFirst(signed.parent as Uint8Array);
       signed.parent = parent;
     }
-    console.log(signed.root);
     signed.cid = (await cid(new Uint8Array(bytes))) as CID<unknown, 113, 18, 1>;
     return signed;
   }
