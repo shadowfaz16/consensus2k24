@@ -18,13 +18,33 @@ export const contract = getContract({
 
 export default function Balance() {
 
+    const { data, isLoading } = useReadContract({ 
+        contract, 
+        method: resolveMethod("balanceOf") as any, 
+        params: ["0x68a7D0971d886Cf5CdB4fDd63198B695293e5E51"] 
+      });
+
+      const balanceString = data ? String(data) : "No balance available"; // Convert bigint to string
+      const balanceNumber = data ? Number(data) : 0; // Convert bigint to number (be careful with large values)
     
 
+      console.log("data", data);
+      console.log("data type", typeof data);
+
   return (
-    <ThirdwebProvider>
+
         <div>
-            HELLO WORLD
+            {isLoading ? (
+                <div>Loading...</div>
+            ) : (
+                <div>
+                    <p className="text-black">
+                        Wallet balance: {balanceString}
+                        {/* Number: {balanceNumber} */}
+                    </p>
+                </div>
+            )}
         </div>
-    </ThirdwebProvider>
+
   )
 }
