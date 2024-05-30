@@ -13,7 +13,8 @@ const inter = Inter({ subsets: ["latin"] });
 
 (async () => {
   let network = new Network();
-  network.init();
+  console.log("starting network");
+  await network.init();
 })();
 
 const Home = () => {
