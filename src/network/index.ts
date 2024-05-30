@@ -32,9 +32,12 @@ const BOOTSTRAP_PEER_IDS = [
 ];
 
 export class Network {
-  libp2p: Libp2p | undefined;
-  ready(): boolean {
-    return this.libp2p !== undefined;
+  private _libp2p: Libp2p | null = null;
+  get libp2p(): Libp2p {
+    if (this._libp2p == null) {
+      throw new Error("Network not initalized");
+    }
+    return this._libp2p;
   }
   async init() {
     // Enable verbose logging for debugging
@@ -47,7 +50,7 @@ export class Network {
     const { bootstrapAddrs, relayListenAddrs } =
       await getBootstrapMultiaddrs(delegatedClient);
 
-    this.libp2p = await createLibp2p({
+    this._libp2p = await createLibp2p({
       addresses: {
         listen: [
           // Listen for webRTC connection
