@@ -7,9 +7,14 @@ export default function Connectbutton() {
   return (
     <ThirdwebProvider>
       <ConnectButton client={client}
-      detailsButton={{
+      connectButton={{
+        label: "Connect",
         style: {
-          color: "red",
+          color: "#ffffff",
+          backgroundColor: "#000",
+          borderRadius: "0.375rem",
+          padding: "0.5rem 1rem",
+          fontSize: "1rem",
         },
       }}
       chains={[{

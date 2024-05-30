@@ -1,7 +1,8 @@
 // store.js
 import {create} from "zustand";
+import { persist } from 'zustand/middleware'
 
-const useStore = create((set) => ({
+const useStore = create(persist((set) => ({
   peerId: null,
   privateKey: null,
   peers: [],
@@ -14,6 +15,8 @@ const useStore = create((set) => ({
   addPeer: (peer: any) => set((state: { peers: any; }) => ({ peers: [...state.peers, peer] })),
   setLoading: (loading: any) => set({ loading }),
     setPeerNumber: (peerNumber: any) => set({ peerNumber }),
+}), {
+  name: 'libp2p-store',
 }));
 
 export default useStore;

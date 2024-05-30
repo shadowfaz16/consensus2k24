@@ -21,18 +21,19 @@ type BaseBlock = {
 
 export class ChainStore {
   blockstore: IDBBlockstore | null = null;
-  async init() {
+  static async init() {
+    let self = new ChainStore();
     const store = new IDBBlockstore("blocks");
     await store.open();
-    this.blockstore = store;
-    db = this;
+    self.blockstore = store;
+    db = self;
   }
   static ready() {
     if (db == null) {
       throw new Error("db not initialized");
     }
   }
-  async create(
+  static async create(
     parent: BlockView | null,
     data: Data,
     key: PrivateKey,
@@ -69,7 +70,7 @@ export class ChainStore {
     await db?.blockstore?.put(signed.cid, signed.bytes);
     return signed;
   }
-  async get(cid: CID.CID): Promise<BlockView | undefined> {
+  static async get(cid: CID.CID): Promise<BlockView | undefined> {
     let bytes = await db?.blockstore?.get(cid);
     if (bytes === undefined) {
       return undefined;
