@@ -7,6 +7,11 @@ export default function Connectbutton() {
   return (
     <ThirdwebProvider>
       <ConnectButton client={client}
+      detailsButton={{
+        style: {
+          color: "red",
+        },
+      }}
       chains={[{
         id: 30,
         rpc: "30.rpc.thirdweb.com",
