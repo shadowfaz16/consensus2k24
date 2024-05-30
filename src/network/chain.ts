@@ -1,79 +1,101 @@
 import { IDBBlockstore } from "blockstore-idb";
-import CID, { BlockView } from "multiformats";
-import { Block, encode, decode } from "multiformats/block";
-import * as codec from "@ipld/dag-cbor";
-import { sha256 as hasher } from "multiformats/hashes/sha2";
+import { CID, MultihashDigest } from "multiformats";
+import { sha256 } from "multiformats/hashes/sha2";
 import { PrivateKey, PublicKey } from "@libp2p/interface";
+import { Encoder, Decoder } from "cbor-web";
 
 let db: ChainStore | null = null;
-type Data = Genesis;
-type Genesis = {
+export type Data = GenesisBlock;
+export type GenesisBlock = {
   key: PublicKey;
 };
-type BaseBlock = {
-  root: CID.CID<unknown, 113, 18, 1> | null;
-  parent: CID.CID<unknown, 113, 18, 1> | null;
+export type BaseBlock = {
+  root: CID<unknown, 113, 18, 1> | null;
+  parent: CID<unknown, 113, 18, 1> | null;
   seq: number;
+  block_type: "Genesis";
   data: Data;
-  hash: CID.CID<unknown, 113, 18, 1>;
+  hash: Uint8Array;
   sig: Uint8Array;
+  cid: CID<unknown, 113, 18, 1>;
 };
+
+async function cid(bytes: Uint8Array): Promise<CID> {
+  return CID.create(1, 0x51, await sha256.digest(bytes));
+}
 
 export class ChainStore {
   blockstore: IDBBlockstore | null = null;
-  async init() {
+  static async init() {
+    let self = new ChainStore();
     const store = new IDBBlockstore("blocks");
     await store.open();
-    this.blockstore = store;
-    db = this;
+    self.blockstore = store;
+    db = self;
   }
   static ready() {
     if (db == null) {
       throw new Error("db not initialized");
     }
   }
-  async create(
-    parent: BlockView | null,
+  static async create(
+    parent: BaseBlock | null,
     data: Data,
     key: PrivateKey,
-  ): Promise<BlockView> {
+  ): Promise<BaseBlock> {
     let rcid = null;
     let pcid = null;
     let seq = 0;
     if (parent != null) {
-      let value = parent.value as BaseBlock;
-      rcid = value.root || parent.cid;
+      rcid = parent.root || parent.cid;
       pcid = parent.cid;
-      seq = value.seq + 1;
+      seq = parent.seq + 1;
     }
-    let unsigned = await encode({
-      value: { parent: pcid, seq, data },
-      codec,
-      hasher,
+    let unsigned = Encoder.encode({ parent: pcid?.bytes, seq, data });
+    let hash = await sha256.digest(unsigned);
+    let sig = new Uint8Array(await key.sign(hash.bytes));
+    let signed = Encoder.encode({
+      root: rcid?.bytes || null,
+      parent: pcid?.bytes || null,
+      seq,
+      block_type: "Genesis",
+      data,
+      hash: hash.bytes,
+      sig,
     });
-    let hash = unsigned.cid;
-    let sig = await key.sign(hash.bytes);
-    let signed = await encode({
-      value: {
-        root: rcid,
-        parent: pcid,
-        seq,
-        data,
-        hash,
-        sig,
-      } as BaseBlock,
-      codec,
-      hasher,
-    });
+    let address = await cid(signed);
+    let block = {
+      root: rcid,
+      parent: pcid,
+      seq,
+      block_type: "Genesis",
+      data,
+      hash: hash.bytes,
+      sig,
+      cid: address,
+    } as BaseBlock;
     ChainStore.ready();
-    await db?.blockstore?.put(signed.cid, signed.bytes);
-    return signed;
+    await db?.blockstore?.put(address, signed);
+    return block;
   }
-  async get(cid: CID.CID): Promise<BlockView | undefined> {
-    let bytes = await db?.blockstore?.get(cid);
+  static async get(address: CID): Promise<BaseBlock | undefined> {
+    let bytes = await db?.blockstore?.get(address);
     if (bytes === undefined) {
       return undefined;
     }
-    return await decode({ bytes, codec, hasher });
+    let signed = (await Decoder.decodeFirst(bytes, {
+      required: true,
+    })) as any;
+    if (signed.root) {
+      let [root] = CID.decodeFirst(signed.root as Uint8Array);
+      signed.root = root;
+    }
+    if (signed.parent) {
+      let [parent] = CID.decodeFirst(signed.parent as Uint8Array);
+      signed.parent = parent;
+    }
+    console.log(signed.root);
+    signed.cid = (await cid(new Uint8Array(bytes))) as CID<unknown, 113, 18, 1>;
+    return signed;
   }
 }
