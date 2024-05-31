@@ -5,9 +5,6 @@ import React, { useEffect } from "react";
 import useStore from "@/store/store";
 
 const Blocks = () => {
-  const genesisBlock = ChainStore.genesis();
-  console.log("Genesis Block by Will:", genesisBlock);
-
   const setUserGeneratedWallet = useStore(
     (state) => state.setUserGeneratedWallet
   );
@@ -16,35 +13,6 @@ const Blocks = () => {
   const [blockChain, setBlockChiain] = React.useState<any[]>([]);
   const { ethers } = require("ethers");
 
-  const handleInitializeChainStore = async () => {
-    try {
-      //   const private_key = await libp2pKeys.unmarshalPrivateKey(privateKey);
-      //   const key = await libp2pKeys.unmarshalPublicKey(publicKey);
-      //   if (!private_key || !key) {
-      //     console.error("Public or private key is missing.");
-      //     return;
-      //   }
-      //   setBlocks([block1]);
-      //   console.log("First block CID:", block1.cid);
-      //   console.log("First block CID QR CODE:", block1.cid.toString());
-      //   console.log("Block1 digest: ", block1.cid.multihash.digest);
-      // Extract the digest from block1.cid.multihash.digest
-      //   const digestArray = new Uint8Array(block1.cid.multihash.digest);
-      // Take the first 20 bytes of the digest to form the address
-      //   const addressBytes = digestArray.slice(0, 20);
-      //   const addressHex = ethers.utils.hexlify(addressBytes);
-      // Convert to a checksummed Ethereum address
-      //   const checksumAddress = ethers.utils.getAddress(addressHex);
-      //   setUserGeneratedWallet(checksumAddress);
-      // Set the QR code string
-      //   setQrString(qrCode);
-      //   console.log("QR Code String:", qrCode);
-      //   console.log("Generated Ethereum Address:", checksumAddress);
-    } catch (error) {
-      console.error("Error initializing ChainStore:", error);
-    }
-  };
-
   useEffect(() => {
     const fetchGenesisBlock = async () => {
       try {
@@ -52,6 +20,7 @@ const Blocks = () => {
         const blocks = await ChainStore.roots();
         setBlockChiain(blocks || []);
         console.log("Genesis Block by Will:", genesisBlock);
+        console.log("Blocks by Will:", blocks);
 
         const digestArray = new Uint8Array(genesisBlock!.cid.multihash.digest);
 
