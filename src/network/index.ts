@@ -208,7 +208,7 @@ export class Network {
     const datastore = new IDBDatastore("libp2p");
     await datastore.open();
     await blockstore.open();
-    ChainStore.init(blockstore);
+    await ChainStore.init(blockstore);
 
     // Enable verbose logging for debugging
     localStorage.debug = "ui*";
@@ -222,6 +222,15 @@ export class Network {
 
     let key = await ChainStore.key();
     let peerId = await peerIdFromKeys(key.public.bytes, key.bytes);
+
+    if ((await ChainStore.genesis()) == null) {
+      let block = await ChainStore.create(
+        null,
+        { type: "Genesis", key: key.public },
+        key,
+      );
+      await ChainStore.putGenesis(block.cid);
+    }
 
     this._libp2p = await createLibp2p({
       peerId,
