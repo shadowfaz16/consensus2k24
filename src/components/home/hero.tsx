@@ -2,6 +2,7 @@ import React from "react";
 import Image from "next/image";
 import { ImMagicWand } from "react-icons/im";
 import Link from "next/link";
+import hero from "@/assets/static/herro.webp"
 
 const Hero = () => {
   return (
@@ -43,13 +44,13 @@ const Hero = () => {
           </div>
         </div>
         <div>
-          <div className="md:w-[500px] md:h-[500px] bg-gray-400 animate-pulse rounded-lg" />
-          {/* <img
-            src="placeholder.png"
+          <Image
+            src={hero}
             alt="github-actions"
             width={500}
             height={500}
-          /> */}
+            className="rounded-lg"
+          />
         </div>
       </div>
       {/* <div className="container mx-auto flex flex-col items-center justify-center gap-8">

@@ -19,6 +19,7 @@ import { keys as libp2pKeys } from "@libp2p/crypto";
 import useStore from "@/store/store";
 import { IoScanSharp } from "react-icons/io5";
 import QRCodeScanner from "../qr/QRCodeScanner";
+import {getNetworkInstance} from "@/hooks/networkManager";
 
 interface TransactionInfo {
   block_height: number;
@@ -62,6 +63,8 @@ const SendNFT = ({
   const [scannedValue, setScannedValue] = useState("");
   const [scan, setScan] = useState(false);
   const [cid, setCid] = useState<CID | null>(null);
+  const network = getNetworkInstance();
+
 
   const handleScan = (data: string) => {
     setScannedValue(data);
@@ -77,7 +80,7 @@ const SendNFT = ({
   // connect to your contract
   const contract = getContract({
     client,
-    chain: defineChain(11155111),
+    chain: defineChain(30),
     address: contract_address
       ? contract_address
       : "0xEF267Bbd18e11e703D054a01ded08b697029cc19",
@@ -163,13 +166,13 @@ const SendNFT = ({
         </div>
         <button
           className={`mt-4 px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50`}
-          disabled={!scannedValue}
+          onClick={() => network.exportAsset(cid)}
         >
           Send NFT
         </button>
         {transactionInfo !== null && (
           <button
-            onClick={() => createBlock()}
+            // onClick={() => network.exporAsset(cid)}
             className="mt-4 px-4 py-2 bg-blue-500 text-white rounded mx-4"
           >
             create block

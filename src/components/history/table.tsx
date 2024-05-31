@@ -29,7 +29,7 @@ export default function Component() {
     const client = new CovalentClient("cqt_rQJQcxMbk6yHpHYCRhVcXV4kvfwd");
     try {
         const transactions = [];
-        for await (const resp of client.TransactionService.getAllTransactionsForAddress("eth-sepolia", user_wallet as string, {"noLogs": true,"blockSignedAtAsc": false})) {
+        for await (const resp of client.TransactionService.getAllTransactionsForAddress("rsk-mainnet", user_wallet as string, {"noLogs": true,"blockSignedAtAsc": false})) {
             transactions.push(resp);
         }
         setTransactionData(transactions); // Update the state with the fetched transactions
@@ -68,7 +68,7 @@ useEffect(() => {
             {
               transactionData.slice(0, 10).map((transaction, index) => {
                 return (
-            <TableRow className="">
+            <TableRow className="" key={index}>
               <TableCell>
                 <div className="font-medium py-2">{transaction.from_address}</div>
                 {/* <div className="hidden text-sm text-muted-foreground md:inline">

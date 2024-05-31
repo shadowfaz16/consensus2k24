@@ -10,6 +10,7 @@ import Layout from "@/components/layout";
 import { Network } from "@/network";
 import useStore from "@/store/store";
 import useNetwork from "@/hooks/useNetwork";
+import Info from "@/components/home/info";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -29,6 +30,7 @@ const Home = () => {
     
         <>
           <Hero />
+          <Info />
           {/* {loading ? (
         <>
         <div className="w-48 h-48 bg-gray-500 animate-pulse"></div>

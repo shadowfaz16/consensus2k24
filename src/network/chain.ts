@@ -271,7 +271,6 @@ export class ChainStore {
         type: block.data.type,
         sender_address: block.data.sender_address.bytes,
         receiver_address: block.data.receiver_address.bytes,
-        contract: block.data.contract.bytes,
         asset: block.data.asset.bytes,
       });
     } else if (block.data.type === "Send") {
@@ -279,7 +278,6 @@ export class ChainStore {
         type: block.data.type,
         sender_address: block.data.sender_address.bytes,
         receiver_address: block.data.receiver_address.bytes,
-        contract: block.data.contract.bytes,
         asset: block.data.asset.bytes,
       });
     }

@@ -233,7 +233,7 @@ export class Network {
     let transfer = await ChainStore.create(
       newchain,
       {
-        type: "Send",
+        type: "Accept",
         sender_address: genesis.cid,
         receiver_address: newchain.cid,
         asset,
@@ -258,6 +258,7 @@ export class Network {
       },
       pkey,
     );
+    data.blocks.push(send);
     data.blocks.push(newchain);
     data.blocks.push(transfer);
     let dump = JSON.stringify(data);

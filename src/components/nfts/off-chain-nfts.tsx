@@ -43,7 +43,7 @@ const FetchNfts = () => {
     try {
       const client = new CovalentClient("cqt_rQJQcxMbk6yHpHYCRhVcXV4kvfwd");
       const resp = await client.NftService.getNftsForAddress(
-        "eth-sepolia",
+        "rsk-mainnet",
         generatedUserWallet as string,
         { withUncached: true }
       );
@@ -68,7 +68,7 @@ const FetchNfts = () => {
       <div>
         <h1 className="font-medium text-lg">Off chain assets</h1>
         <p className="text-sm text-gray-500">
-          Here are the assets you've burned and stored in your private network
+          Here are the assets you&apos;ve burned and stored in your private network
         </p>
       </div>
       {nftData ? (

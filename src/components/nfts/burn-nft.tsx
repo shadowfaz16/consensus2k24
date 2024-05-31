@@ -76,10 +76,10 @@ const BurnNFT = ({
   // connect to your contract
   const contract = getContract({
     client,
-    chain: defineChain(11155111),
+    chain: defineChain(30),
     address: contract_address
       ? contract_address
-      : "0xEF267Bbd18e11e703D054a01ded08b697029cc19",
+      : "0x694E30a30fCB1c85a7b17C70ADE0Bdb51f4960F0",
   });
 
   const {
@@ -123,7 +123,7 @@ const BurnNFT = ({
     try {
       const client = new CovalentClient("cqt_rQJQcxMbk6yHpHYCRhVcXV4kvfwd");
       const resp = await client.TransactionService.getTransaction(
-        "eth-sepolia",
+        "rsk-mainnet",
         txHash,
       );
       const { block_height, tx_hash, from_address, to_address } =
@@ -211,7 +211,7 @@ const BurnNFT = ({
         </button>
         {transactionInfo !== null && (
           <div className="mt-4 p-4 bg-gray-100 rounded">
-            <Link target="_blank" href={`https://sepolia.etherscan.io/tx/${transactionInfo.tx_hash}`} className="font-medium text-sm text-blue-400 hover:text-blue-600">View your transaction in the scanner!</Link>
+            <Link target="_blank" href={`https://explorer.rootstock.io/tx/${transactionInfo.tx_hash}`} className="font-medium text-sm text-blue-400 hover:text-blue-600">View your transaction in the scanner!</Link>
           </div>
         )}
         <ImageUploader
