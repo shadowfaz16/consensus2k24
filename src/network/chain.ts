@@ -10,9 +10,11 @@ let db: ChainStore | null = null;
 
 export type Data = GenesisBlock | ImportAsset | SendAsset | AcceptAsset;
 export type GenesisBlock = {
+  type: "Genesis";
   key: PublicKey;
 };
 export type ImportAsset = {
+  type: "Import";
   chain: "RSK";
   block_height: number;
   tx_hash: string;
@@ -21,12 +23,14 @@ export type ImportAsset = {
   asset: CID;
 };
 export type SendAsset = {
+  type: "Send";
   sender_address: CID;
   receiver_address: CID;
   contract: CID;
   asset: CID;
 };
 export type AcceptAsset = {
+  type: "Accept";
   sender_address: CID;
   receiver_address: CID;
   contract: CID;
@@ -34,9 +38,9 @@ export type AcceptAsset = {
 };
 export type BaseBlock = {
   root: CID<unknown, 113, 18, 1> | null;
+  block_type: "Genesis" | "Import" | "Send" | "Accept";
   parent: CID<unknown, 113, 18, 1> | null;
   seq: number;
-  block_type: "Genesis";
   data: Data;
   hash: Uint8Array;
   sig: Uint8Array;
@@ -193,7 +197,7 @@ export class ChainStore {
       root: rcid?.bytes || null,
       parent: pcid?.bytes || null,
       seq,
-      block_type: "Genesis",
+      block_type: data.type,
       data,
       hash: hash.bytes,
       sig,
