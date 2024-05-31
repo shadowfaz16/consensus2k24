@@ -76,66 +76,11 @@ type SendResponse = {
   result: "Accept" | "Decline";
 };
 
-class AsyncWebSocket {
-  private socket: WebSocket;
-  private openPromise: Promise<void>;
-  private messageQueue: ((message: MessageEvent) => void)[];
-
-  constructor(url: string) {
-    this.socket = new WebSocket(url);
-    this.messageQueue = [];
-
-    this.openPromise = new Promise<void>((resolve, reject) => {
-      this.socket.addEventListener("open", () => resolve());
-      this.socket.addEventListener("error", (err) => reject(err));
-    });
-
-    this.socket.addEventListener("message", (event) => {
-      const handler = this.messageQueue.shift();
-      if (handler) {
-        handler(event);
-      }
-    });
-  }
-
-  async connect() {
-    await this.openPromise;
-  }
-
-  send(data: string | ArrayBuffer | Blob | ArrayBufferView) {
-    this.socket.send(data);
-  }
-
-  async receive(): Promise<string> {
-    return new Promise<string>((resolve) => {
-      this.messageQueue.push((event) => resolve(event.data));
-    });
-  }
-
-  close(code?: number, reason?: string) {
-    this.socket.close(code, reason);
-  }
-}
-
-(async () => {
-  await ws.connect();
-  console.log("WebSocket connected");
-
-  ws.send(JSON.stringify({ type: "greeting", message: "Hello Server!" }));
-
-  const message = await ws.receive();
-  console.log("Received:", message);
-
-  ws.close();
-})();
-
 export class Network {
   private _libp2p: Libp2p | null = null;
   private _helia: Helia | null = null;
-  private _rendevous: AsyncWebSocket | null = null;
   async sendHandler(data: IncomingStreamData) {
     const stream = lpStream(data.stream);
-    const ws = new AsyncWebSocket("wss://your-server-url");
     let msg = (await stream.read()).subarray();
     let req = (await Decoder.decodeFirst(msg)) as SendRequest;
     await this.getFile(req.asset);
