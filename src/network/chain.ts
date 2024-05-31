@@ -105,6 +105,7 @@ export class ChainStore {
     }
     return assets;
   }
+  
   static async putGenesis(root: CID) {
     let operation = db?.metadata
       ?.transaction("self", "readwrite")
@@ -123,6 +124,7 @@ export class ChainStore {
       };
     });
   }
+
   static async genesis(): Promise<BaseBlock | null> {
     let operation = db?.metadata
       ?.transaction("self")
@@ -463,5 +465,25 @@ export class ChainStore {
     }
     let [child] = CID.decodeFirst(result.child);
     return await this.get(child);
+  }
+  static async getAllBlocks(): Promise<BaseBlock[]> {
+    const genesisBlock = await this.genesis();
+    if (!genesisBlock) {
+      throw new Error("No genesis block found");
+    }
+
+    const allBlocks: BaseBlock[] = [];
+    await this.traverseBlocks(genesisBlock, allBlocks);
+
+    return allBlocks;
+  }
+
+  private static async traverseBlocks(block: BaseBlock, allBlocks: BaseBlock[]): Promise<void> {
+    allBlocks.push(block);
+
+    const child = await this.child(block.cid);
+    if (child) {
+      await this.traverseBlocks(child, allBlocks);
+    }
   }
 }

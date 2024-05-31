@@ -5,11 +5,13 @@ import { FaQq, FaQrcode, FaUpload } from 'react-icons/fa';
 import { IoChevronDownOutline, IoChevronUpOutline } from "react-icons/io5";
 import QRCodeGenerator from '../qr/QrGenerator';
 import { AnimatePresence, motion } from 'framer-motion';
+import useStore from '@/store/store';
 
 const BottomBar = () => {
   const { loading, peerId, publicKey, peerNumber } = useNetwork();
   const [isExpanded, setIsExpanded] = useState(false);
   const [showQr, setShowQr] = useState(false);
+  const generatedUserWallet = useStore((state) => state.userGeneratedWallet);
 
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
@@ -61,7 +63,7 @@ const BottomBar = () => {
                 Public Key: <span className="font-bold text-xs">{publicKey ? bytesToBase64(publicKey) : 'N/A'}</span>
               </p>
               <p className="text-sm">
-                Connected Peers: <span className="font-bold text-xs">{peerNumber}</span>
+                Burner wallet: <span className="font-bold text-xs">{generatedUserWallet}</span>
               </p>
             </>
           )}

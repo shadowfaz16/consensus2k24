@@ -1,35 +1,38 @@
-import useNetwork from "@/hooks/useNetwork";
-import { BaseBlock, ChainStore } from "@/network/chain";
-import { keys as libp2pKeys } from "@libp2p/crypto";
+// Blocks.tsx
 import React, { useEffect } from "react";
+import { BaseBlock, ChainStore } from "@/network/chain";
 import useStore from "@/store/store";
+import useBlockStore from "@/store/blockStore";
 
 const Blocks = () => {
-  const setUserGeneratedWallet = useStore(
-    (state) => state.setUserGeneratedWallet
-  );
+  const setUserGeneratedWallet = useStore((state) => state.setUserGeneratedWallet);
   const generatedUserWallet = useStore((state) => state.userGeneratedWallet);
   const setQrString = useStore((state) => state.setQrString);
-  const [blockChain, setBlockChiain] = React.useState<any[]>([]);
+  const blocks = useBlockStore((state) => state.blocks);
+  const setBlocks = useBlockStore((state) => state.setBlocks);
+  const setLastBlock = useBlockStore((state) => state.setLastBlock); // Ensure you have this setter in your store
   const { ethers } = require("ethers");
 
-  const loading = useStore((state) => state.loading);
-
   useEffect(() => {
-    const fetchGenesisBlock = async () => {
-
+    const fetchAllBlocks = async () => {
       try {
-        const genesisBlock = await ChainStore.genesis();
-        const blocks = await ChainStore.roots();
-        setBlockChiain(blocks);
-        console.log("Genesis Block by Will:", genesisBlock);
-        console.log("Blocks by Will:", blocks);
+        const allBlocks = await ChainStore.getAllBlocks();
+
+        setBlocks(allBlocks);
+        const genesisBlock = allBlocks.find(block => block.seq === 0);
+        if (!genesisBlock) {
+          throw new Error("No genesis block found");
+        }
+
+        const lastBlock = allBlocks[allBlocks.length - 1];
+        setLastBlock(lastBlock);
+
+        console.log("All Blocks:", allBlocks);
+        console.log("Genesis Block:", genesisBlock);
 
         const digestArray = new Uint8Array(genesisBlock!.cid.multihash.digest);
-
         const addressBytes = digestArray.slice(0, 20);
         const addressHex = ethers.utils.hexlify(addressBytes);
-
         const checksumAddress = ethers.utils.getAddress(addressHex);
         setUserGeneratedWallet(checksumAddress);
 
@@ -38,55 +41,37 @@ const Blocks = () => {
 
         console.log("QR Code String:", qr);
         console.log("Generated Ethereum Address:", checksumAddress);
-
-        
-      } catch (error) { 
-        console.error("Failed to fetch genesis block:", error);
-
+      } catch (error) {
+        console.error("Failed to fetch blocks:", error);
       }
     };
 
-    fetchGenesisBlock();
+    fetchAllBlocks();
   }, []);
-
-  if (loading) {
-    return <div>Loading blocks...</div>;
-  }
-
 
   return (
     <div className="flex flex-col gap-6 my-2 bg-white p-7 rounded-lg shadow-lg w-full">
-      <div className="border-none ">
+      <div className="border-none">
         <h2 className="text-xl font-semibold text-gray-800 mb-1">Blocks</h2>
         <p className="text-sm text-gray-500">
           This is the block explorer for your private chain
         </p>
         <p className="font-medium text-xs">Address: {generatedUserWallet}</p>
       </div>
-      {/* <button
-        onClick={handleInitializeChainStore}
-        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-      >
-        Initialize ChainStore
-      </button> */}
       <div className="max-w-7xl mx-auto w-full mt-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-6 md:gap-1">
-          {blockChain.map((block, index) => (
-            <React.Fragment key={index}> 
+        <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-6 md:gap-4">
+          {blocks.map((block, index) => (
+            <React.Fragment key={index}>
               <div className="bg-white p-4 rounded-lg shadow-lg h-72 overflow-y-scroll gap-2 flex flex-col">
-                <p className="font-medium text-sm">Block #: {block.seq}</p>
-                {/* <p className="font-medium">Block #: {index}</p> */}
+                <p className="font-medium text-sm">Block #: {index + 1}</p>
                 <pre className="text-xs">{JSON.stringify(block, null, 2)}</pre>
               </div>
-              {index < blockChain.length - 1 && (
-                <hr className="border-t-2 border-gray-400 h-2 w-24 hidden md:flex" /> 
-              )}
             </React.Fragment>
-          ))} 
+          ))}
         </div>
       </div>
     </div>
   );
-};
+}; 
 
 export default Blocks;

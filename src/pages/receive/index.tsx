@@ -21,11 +21,16 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-[92dvh] flex items-center justify-center">
-        <div className="w-48 h-48 bg-gray-500 animate-pulse">
-        </div>
+      <div className="min-h-[92dvh] flex flex-col items-center justify-center">
+        <div className="w-5 h-5 rounded-full bg-blue-500 animate-bounce mb-2"></div>
         <p>
           LOADING
+        </p>
+        <p>
+          Please wait until your private network is ready
+        </p>
+        <p>
+          this should only take a few seconds
         </p>
       </div>
     );
