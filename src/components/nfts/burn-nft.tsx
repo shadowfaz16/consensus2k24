@@ -128,14 +128,19 @@ const BurnNFT = ({
       );
       const { block_height, tx_hash, from_address, to_address } =
         resp.data.items[0];
-
         console.log("HASH INFO: ", resp.data.items[0]);
+
+        if(block_height == null) {
+          setTimeout(() => HashInfo(txHash));
+        } else {
+
         setBlockHeight(resp.data.items[0].block_height);
         console.log("Block Heighttttt: ", blockHeight);
-
-      setTransactionInfo({ block_height, tx_hash, from_address, to_address });
+        setTransactionInfo({ block_height, tx_hash, from_address, to_address });
+        }
     } catch (error) {
       console.error("Error fetching transaction info:", error);
+      setTimeout(() => HashInfo(txHash));
     }
   };
 
@@ -204,7 +209,7 @@ const BurnNFT = ({
         >
           {isPending && "Migrating..."}
           {isSuccess && !transactionInfo && "Migrating..."}
-          {isSuccess && transactionInfo && !allSuccess && "Creating private block"}
+          {isSuccess && transactionInfo && "Creating private block"}
           {!isPending && !isSuccess && !error && "Migrate"}
           {isError && "Error"}
           {allSuccess && "New block has been minted!"}
