@@ -15,8 +15,21 @@ import ImageUploader from "@/components/image/image-fetch";
 import Blocks from "@/components/private/blocks";
 
 const Profile = () => {
-  const { loading, peerId, privateKey, publicKey, peerNumber } = useNetwork();
+  const { peerId, privateKey, publicKey, peerNumber } = useNetwork();
+  const loading = useStore((state) => state.loading);
   const [showQr, setShowQr] = React.useState(false);
+
+  if (loading) {
+    return (
+      <div className="min-h-[92dvh] flex items-center justify-center">
+        <div className="w-48 h-48 bg-gray-500 animate-pulse">
+        </div>
+        <p>
+          LOADING
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[92dvh] flex flex-col items-center bg-gray-100 p-4 gap-4 pb-16">
