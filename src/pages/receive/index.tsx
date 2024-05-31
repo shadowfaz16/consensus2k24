@@ -37,7 +37,7 @@ const Profile = () => {
         return;
       }
 
-      const block1 = await ChainStore.create(null, { key }, private_key);
+      const block1 = await ChainStore.create(null, {type: "Genesis", key }, private_key);
 
       setBlocks([block1]);
       console.log("Blocks:", [block1]);

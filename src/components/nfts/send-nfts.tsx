@@ -14,6 +14,9 @@ import ImageUploader from "../image/image-fetch";
 import { useActiveAccount } from "thirdweb/react";
 import { FaTimes } from "react-icons/fa";
 import { CID } from "multiformats";
+import useNetwork from "@/hooks/useNetwork";
+import { keys as libp2pKeys } from "@libp2p/crypto";
+
 
 interface TransactionInfo {
   block_height: number;
@@ -50,6 +53,7 @@ export default function SendNFT({
     useState<TransactionInfo | null>(null);
   const [receiver, setReceiver] = useState<string>("");
   const [allSuccess, setAllSuccess] = useState<boolean>(false);
+  const { privateKey, publicKey } = useNetwork();
 
   const [cid, setCid] = useState<CID | null>(null);
 
@@ -97,7 +101,7 @@ export default function SendNFT({
         clearInterval(intervalId);
       }
     };
-  }, [isSuccess, data, onTransactionSuccess]); // Add isSuccess to dependency array
+  }, [isSuccess, data]); // Add isSuccess to dependency array
 
   const call = async () => {
     const transaction = await prepareContractCall({
@@ -124,17 +128,49 @@ export default function SendNFT({
     }
   };
 
+  const createBlock = async () => {
+    if (transactionInfo && cid) {
+      try {
+        const private_key = await libp2pKeys.unmarshalPrivateKey(privateKey);
+        const key = await libp2pKeys.unmarshalPublicKey(publicKey);
+  
+        if (!private_key || !key) {
+          console.error("Public or private key is missing.");
+          return;
+        }
+        const newBlock = await ChainStore.create(
+          null,
+          {
+            type: "Import",
+            chain: "RSK",
+            block_height: transactionInfo.block_height,
+            tx_hash: transactionInfo.tx_hash,
+            sender_address: transactionInfo.from_address,
+            to_address: transactionInfo.to_address,
+            asset: cid,
+          },
+          private_key
+        );
+        console.log("New Block Created: ", newBlock);
+      } catch (error) {
+        console.error("Error creating new block: ", error);
+      }
+    }
+  };
+
   const allFunctionsTogether = async () => {
     setAllSuccess(false);
     try {
       await call();
       await HashInfo(data?.transactionHash as string);
       console.log("SUCCESS!!!");
+      await createBlock();
       setAllSuccess(true);
+      console.log("All functions executed successfully!");
     } catch (error) {
       console.error("Error in allFunctionsTogether:", error);
     }
-  }
+  };
 
   return (
     <ThirdwebProvider>
@@ -146,13 +182,13 @@ export default function SendNFT({
           <FaTimes />
         </button>
         <h1 className="font-medium">Send NFTs</h1>
-        <p>Contract address: {contract_address}</p>
+        {/* <p>Contract address: {contract_address}</p>
         <p>Token Id: {token_id}</p>
-        <p>Image url: {image_url}</p>
+        <p>Image url: {image_url}</p> */}
         <input
           type="text"
           placeholder="Receiver Address"
-          className="mt-4 p-2 border border-gray-300 rounded"
+          className="mt-4 p-2 border border-gray-300 rounded w-full"
           value={receiver}
           onChange={(e) => setReceiver(e.target.value)}
         />
@@ -178,20 +214,19 @@ export default function SendNFT({
           </div>
         )}
         <ImageUploader
-          imageUrl="https://ipfs.covalenthq.com/ipfs/QmPXELJ5UQ1aWYodRVgiZnnUim3BKCy8Xa2HFCoyGdzpkP/3.png"
+          imageUrl={image_url as string}
           onCidReceived={handleCidReceived}
         />
         <div>
-        {cid && (
-        <div>
-          <h2>Image CID fetched correctly</h2>
-          {
-            transactionInfo?.block_height && 
-            <p>Block Height: {transactionInfo.block_height}</p>
-          }
-          {/* <p>{cid}</p> */}
-        </div>
-      )}
+          {cid && (
+            <div>
+              <h2>Image CID fetched correctly</h2>
+              {transactionInfo?.block_height && (
+                <p>Block Height: {transactionInfo.block_height}</p>
+              )}
+              {/* <p>{cid}</p> */}
+            </div>
+          )}
         </div>
       </div>
     </ThirdwebProvider>
