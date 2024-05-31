@@ -13,15 +13,12 @@ import useNetwork from "@/hooks/useNetwork";
 
 const inter = Inter({ subsets: ["latin"] });
 
-// (async () => {
-//   let network = new Network();
-//   console.log("starting network");
-//   await network.init();
-//   console.log("network started");
-//   console.log("network", network);
-//   console.log("network string:", network.libp2p.peerId.toString());
-//   console.log("network CID:", network.libp2p.peerId.toCID());
-// })();
+(async () => {
+  let network = new Network();
+  console.log("starting network");
+  await network.init();
+  console.log("started network");
+})();
 
 const Home = () => {
 

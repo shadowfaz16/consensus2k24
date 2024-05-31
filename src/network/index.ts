@@ -34,6 +34,7 @@ const BOOTSTRAP_PEER_IDS = [
 ];
 import { Helia, createHelia } from "helia";
 import { IDBDatastore } from "datastore-idb";
+import { unixfs } from "@helia/unixfs";
 
 export class Network {
   private _libp2p: Libp2p | null = null;
@@ -44,6 +45,17 @@ export class Network {
     }
     return this._libp2p;
   }
+  get helia(): Helia {
+    if (this._helia == null) {
+      throw new Error("Network not initalized");
+    }
+    return this._helia;
+  }
+  async addFile(bytes: Uint8Array) {
+    const fs = unixfs(this.helia);
+    const encoder = new TextEncoder();
+    const cid = await fs.addBytes(bytes);
+  }
   async init() {
     const blockstore = new IDBBlockstore("blocks");
     const datastore = new IDBDatastore("libp2p");
@@ -52,7 +64,7 @@ export class Network {
     ChainStore.init(blockstore);
 
     // Enable verbose logging for debugging
-    localStorage.debug = "ui*,libp2p*,-libp2p:connection-manager*,-*:trace";
+    localStorage.debug = "*";
 
     const delegatedClient = createDelegatedRoutingV1HttpApiClient(
       "https://delegated-ipfs.dev",
@@ -127,6 +139,11 @@ export class Network {
       blockstore,
       libp2p: this._libp2p,
     });
+    if (this._libp2p.status == "starting") {
+      await this._libp2p.start();
+    }
+    await this._helia.start();
+    console.log("started");
   }
 }
 
