@@ -11,6 +11,7 @@ type Store = {
   peerNumber: number;
   userGeneratedWallet: any;
   qrString: string;
+  network: any; // Add network state
   setPeerId: (peerId: any) => void;
   setKeys: (privateKey: any, publicKey: any) => void;
   setUserGeneratedWallet: (userGeneratedWallet: any) => void;
@@ -19,6 +20,7 @@ type Store = {
   setLoading: (loading: any) => void;
   setPeerNumber: (peerNumber: any) => void;
   setQrString: (qrString: any) => void;
+  setNetwork: (network: any) => void; // Add setter for network
 };
 
 const useStore = create<Store>()(persist((set) => ({
@@ -30,6 +32,7 @@ const useStore = create<Store>()(persist((set) => ({
   peerNumber: 0,
   userGeneratedWallet: null,
   qrString: "",
+  network: null, // Initialize network state
   setPeerId: (peerId: any) => set({ peerId, loading: false }),
   setKeys: (privateKey: any, publicKey: any) => set({ privateKey, publicKey }),
   setUserGeneratedWallet: (userGeneratedWallet: any) => set({ userGeneratedWallet }),
@@ -38,6 +41,8 @@ const useStore = create<Store>()(persist((set) => ({
   addPeer: (peer: any) => set((state: { peers: any; }) => ({ peers: [...state.peers, peer] })),
   setLoading: (loading: any) => set({ loading }),
     setPeerNumber: (peerNumber: any) => set({ peerNumber }),
+    setNetwork: (network: any) => set({ network }), // Add setter for network
+
 }), {
   name: 'libp2p-store',
 }));

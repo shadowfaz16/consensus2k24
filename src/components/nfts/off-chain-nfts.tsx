@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { CovalentClient } from "@covalenthq/client-sdk";
+import useStore from "@/store/store";
 
 const OffChainNFTs = () => {
   const [nftData, setNftData] = useState<[]>([]);
+  const userGeneratedWallet = useStore((state) => state.userGeneratedWallet);
 
   useEffect(() => {
     const fetchNftData = async () => {

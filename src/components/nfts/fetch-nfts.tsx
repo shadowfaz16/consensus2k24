@@ -22,13 +22,13 @@ const FetchNfts = () => {
     token_id: bigint,
     image_url: string
   ) => {
-    setSelectedNFT({ contract_address, token_id: Number(token_id), image_url }); 
+    setSelectedNFT({ contract_address, token_id: Number(token_id), image_url });  
     setIsSendNFTModalOpen(true);
   };
   console.log("Selected NFT: ", selectedNFT);
   console.log("TOKEN ID: ", (selectedNFT?.token_id));
 
-  const closeSendNFTModal = () => {
+  const closeSendNFTModal = () => { 
     setIsSendNFTModalOpen(false);
     setSelectedNFT(null);
   };
@@ -38,7 +38,7 @@ const FetchNfts = () => {
 
   const fetchNftData = async () => {
     try {
-      const client = new CovalentClient("cqt_rQJQcxMbk6yHpHYCRhVcXV4kvfwd");
+      const client = new CovalentClient("cqt_rQJQcxMbk6yHpHYCRhVcXV4kvfwd"); 
       const resp = await client.NftService.getNftsForAddress(
         "eth-sepolia",
         userWallet as string,

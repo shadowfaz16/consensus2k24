@@ -12,6 +12,7 @@ const Blocks = () => {
   const setQrString = useStore((state) => state.setQrString);
   const [blockChain, setBlockChiain] = React.useState<any[]>([]);
   const { ethers } = require("ethers");
+  
 
   useEffect(() => {
     const fetchGenesisBlock = async () => {

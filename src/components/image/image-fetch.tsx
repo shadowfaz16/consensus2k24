@@ -1,18 +1,26 @@
-import React, { useEffect } from "react";
-import { Network } from "@/network"; // Adjust the path to your actual Network instance
+import React, { useEffect, useRef, memo } from "react";
 import { CID } from "multiformats";
+import { getNetworkInstance } from "@/hooks/networkManager";
 
 interface ImageUploaderProps {
-    imageUrl: string;
-    onCidReceived: (cid: CID) => void; // Callback to receive the CID
+  imageUrl: string;
+  onCidReceived: (cid: CID) => void; // Callback to receive the CID
 }
 
-// Initialize the Network instance
-const network = new Network();
-
 const ImageUploader = ({ imageUrl, onCidReceived }: ImageUploaderProps) => {
+  const network = getNetworkInstance();
+  const isFetchingRef = useRef(false); // To track if the fetchImageAndUpload function is already running
+  const currentImageUrlRef = useRef<string | null>(null); // To track the current image URL
+
   useEffect(() => {
     const fetchImageAndUpload = async () => {
+      if (!network || isFetchingRef.current || currentImageUrlRef.current === imageUrl) {
+        return;
+      }
+
+      isFetchingRef.current = true;
+      currentImageUrlRef.current = imageUrl; // Set the current image URL
+
       try {
         // Fetch the image
         const response = await fetch(imageUrl);
@@ -33,7 +41,6 @@ const ImageUploader = ({ imageUrl, onCidReceived }: ImageUploaderProps) => {
         console.log("Uint8Array:", uint8Array);
 
         // Use the addFile function from the network instance
-        await network.init(); // Ensure network is initialized
         const cid = await network.addFile(uint8Array);
 
         // Call the callback function with the CID
@@ -43,13 +50,15 @@ const ImageUploader = ({ imageUrl, onCidReceived }: ImageUploaderProps) => {
         console.log("File added with CID:", cid);
       } catch (error) {
         console.error("Error uploading image:", error);
+      } finally {
+        isFetchingRef.current = false; // Reset the ref
       }
     };
 
     fetchImageAndUpload();
-  }, [imageUrl, onCidReceived]);
+  }, [imageUrl, onCidReceived, network]);
 
   return null; // No need to render anything in this component
 };
 
-export default ImageUploader;
+export default memo(ImageUploader); // Memoize the component

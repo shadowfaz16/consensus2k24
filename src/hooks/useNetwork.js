@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Network } from "@/network";
 import useStore from "@/store/store";
 import { bytesToHex, bytesToBase64 } from "@/ultils/utils"; // Import conversion functions
+import {setNetworkInstance} from "@/hooks/networkManager";
 
 const useNetwork = () => {
   const setPeerId = useStore((state) => state.setPeerId);
@@ -39,6 +40,7 @@ const useNetwork = () => {
 
         setPeerId(peerIdString);
         setKeys(privateKeyBytes, publicKeyBytes);
+        setNetworkInstance(network); // Save the network instance
         // setPeerNumber(network.libp2p.peerStore.store.datastore.data.size);
       };
 
