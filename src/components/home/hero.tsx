@@ -1,34 +1,28 @@
 import React from "react";
 import Image from "next/image";
-import heroImage from "@/assets/static/hero.png";
-import weset from "@/assets/logos/weset.svg";
-import pxm from "@/assets/logos/pxm.svg";
-import veme from "@/assets/logos/veme.svg";
-import mygeotokens from "@/assets/logos/mygeotokens.gif";
-import gang from "@/assets/logos/gang.png";
 import { ImMagicWand } from "react-icons/im";
 import Link from "next/link";
 
 const Hero = () => {
   return (
     <>
-      <div className="container mx-auto flex flex-col md:flex-row items-center justify-between pb-20 pt-24">
+      <div className="container flex flex-col md:flex-row items-center justify-between px-0 py-4 md:pb-20 md:pt-24 min-h-[80dvh] md:min-h-[82dvh] max-w-7xl mx-auto">
         <div className="space-y-8">
-          <div className="flex items-center space-x-4 rounded bg-bg-300 p-1 md:w-3/5 shadow shadow-primary-200">
-            <div className="rounded bg-primary-200 px-3">
+          {/* <div className="flex items-center space-x-4 rounded bg-gray-100 p-1 md:w-3/5 shadow">
+            <div className="rounded bg-white px-3">
               <span className="text-xs text-text-100">WHAT&apos;S NEW</span>
             </div>
             <p className="text-text-200">
               Transactional freedom
             </p>
-          </div>
-          <h1 className="text-6xl font-medium text-text-100 md:w-2/3">
+          </div> */}
+          <h1 className="text-4xl md:text-6xl font-medium text-text-100 md:w-2/3">
             Bring your on chain assets off chain
           </h1>
           <p className="text-lg text-text-100">
-            Wonderland is a platform that helps you prove off chain asset ownership.
+            Amendment 0 is a platform that empowers private transactional freedom.
             <span className="mt-2 block font-semibold">
-              Controle your data while maintaining provinance
+              Bring your assets off-chain while maintaining provinance
             </span>
           </p>
           <div className="space-y-3">
@@ -39,12 +33,12 @@ const Hero = () => {
                   Get Started Now
                 </p>
               </Link>
-              <p className="rounded-md p-3 text-sm text-primary-100">
+              {/* <p className="rounded-md p-3 text-sm text-primary-100">
                 Read the docs
-              </p>
+              </p> */}
             </div>
             <p className="text-xs text-text-200">
-              Lorem ipsum dolor sit amet consectetur
+              Help us empower transactional freedom
             </p>
           </div>
         </div>

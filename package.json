@@ -38,6 +38,7 @@
     "clsx": "^2.1.1",
     "datastore-idb": "^2.1.9",
     "ethers": "^5.7.2",
+    "framer-motion": "^11.2.9",
     "helia": "^4.2.3",
     "it-first": "^3.0.6",
     "it-length-prefixed-stream": "^1.1.8",

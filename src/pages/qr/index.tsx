@@ -5,7 +5,6 @@ import QRCodeScanner from "@/components/qr/QRCodeScanner";
 import Layout from "@/components/layout";
 
 const QR = () => {
-  const [qrValue, setQrValue] = useState("");
   const [scannedValue, setScannedValue] = useState("");
   const [scan, setScan] = useState(false);
 
@@ -39,7 +38,7 @@ const QR = () => {
       <div className="">
         {scan ? <QRCodeScanner onScan={handleScan} scannedValue={scannedValue} /> : null}
       </div>
-        {scannedValue ? <p>Scanned Valueeee: {scannedValue}</p> : null}
+        {scannedValue ? <p>Scanned value: {scannedValue}</p> : null}
     </div>
   );
 };

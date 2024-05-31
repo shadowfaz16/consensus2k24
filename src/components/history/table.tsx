@@ -16,14 +16,36 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useActiveAccount } from "thirdweb/react";
+import { useEffect, useState } from "react";
+import { type Transaction } from "@covalenthq/client-sdk";
 
 export default function Component() {
+  const wallet = useActiveAccount();
+  const user_wallet = wallet?.address;
+  const [transactionData, setTransactionData] = useState<Transaction[]>([]);
 
   const ApiServices = async () => {
     const client = new CovalentClient("cqt_rQJQcxMbk6yHpHYCRhVcXV4kvfwd");
-    const resp = await client.NftService.getNftTransactionsForContractTokenId("eth-sepolia","0xEF267Bbd18e11e703D054a01ded08b697029cc19","0", {"noSpam": true});
-    console.log("tx history for token :", resp.data.items);
+    try {
+        const transactions = [];
+        for await (const resp of client.TransactionService.getAllTransactionsForAddress("eth-sepolia", user_wallet as string, {"noLogs": true,"blockSignedAtAsc": false})) {
+            transactions.push(resp);
+        }
+        setTransactionData(transactions); // Update the state with the fetched transactions
+    } catch (error) {
+        console.log(error);
+    }
 }
+
+console.log("transactionData", transactionData);
+
+useEffect(() => {
+    if (user_wallet) {
+        ApiServices();
+    }
+}
+, [user_wallet]);
 
   return (
     <>
@@ -37,7 +59,7 @@ export default function Component() {
           <TableHeader>
             <TableRow>
               <TableHead>Asset</TableHead>
-              <TableHead className="hidden sm:table-cell">Type</TableHead>
+              <TableHead className="hidden sm:table-cell">Token ID</TableHead>
               <TableHead className="hidden sm:table-cell">Status</TableHead>
               <TableHead className="hidden md:table-cell">Date</TableHead>
             </TableRow>
@@ -45,130 +67,80 @@ export default function Component() {
           <TableBody>
             <TableRow className="bg-accent">
               <TableCell>
-                <div className="font-medium">Liam Johnson</div>
+                <div className="font-medium">NFT 1</div>
                 <div className="hidden text-sm text-muted-foreground md:inline">
-                  liam@example.com
+                  Consensus NFTs
                 </div>
               </TableCell>
-              <TableCell className="hidden sm:table-cell">Send</TableCell>
+              <TableCell className="hidden sm:table-cell">0</TableCell>
               <TableCell className="hidden sm:table-cell">
                 <Badge className="text-xs" variant="secondary">
-                  Fulfilled
+                  Complete
                 </Badge>
               </TableCell>
               <TableCell className="hidden md:table-cell">2023-06-23</TableCell>
             </TableRow>
             <TableRow>
               <TableCell>
-                <div className="font-medium">Olivia Smith</div>
+                <div className="font-medium">NFT 2</div>
                 <div className="hidden text-sm text-muted-foreground md:inline">
-                  olivia@example.com
+                  Consensus NFTs
                 </div>
               </TableCell>
-              <TableCell className="hidden sm:table-cell">Receive</TableCell>
+              <TableCell className="hidden sm:table-cell">1</TableCell>
               <TableCell className="hidden sm:table-cell">
                 <Badge className="text-xs" variant="outline">
-                  Declined
+                  Complete
                 </Badge>
               </TableCell>
               <TableCell className="hidden md:table-cell">2023-06-24</TableCell>
             </TableRow>
-            {/* <TableRow>
-                          <TableCell>
-                            <div className="font-medium">Liam Johnson</div>
-                            <div className="hidden text-sm text-muted-foreground md:inline">
-                              liam@example.com
-                            </div>
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            Send
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            <Badge className="text-xs" variant="secondary">
-                              Fulfilled
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            2023-06-23
-                          </TableCell>
-                          <TableCell className="text-right">$250.00</TableCell>
-                        </TableRow> */}
             <TableRow>
               <TableCell>
-                <div className="font-medium">Noah Williams</div>
+                <div className="font-medium">NFT 3</div>
                 <div className="hidden text-sm text-muted-foreground md:inline">
-                  noah@example.com
+                  Consensus NFTs
                 </div>
               </TableCell>
               <TableCell className="hidden sm:table-cell">
-                Subscription
+                2
               </TableCell>
               <TableCell className="hidden sm:table-cell">
                 <Badge className="text-xs" variant="secondary">
-                  Fulfilled
+                  Complete
                 </Badge>
               </TableCell>
               <TableCell className="hidden md:table-cell">2023-06-25</TableCell>
             </TableRow>
             <TableRow>
               <TableCell>
-                <div className="font-medium">Emma Brown</div>
+                <div className="font-medium">NFT 4</div>
                 <div className="hidden text-sm text-muted-foreground md:inline">
-                  emma@example.com
+                  Consensus NFTs
                 </div>
               </TableCell>
-              <TableCell className="hidden sm:table-cell">Send</TableCell>
+              <TableCell className="hidden sm:table-cell">3</TableCell>
               <TableCell className="hidden sm:table-cell">
                 <Badge className="text-xs" variant="secondary">
-                  Fulfilled
+                  Complete
                 </Badge>
               </TableCell>
               <TableCell className="hidden md:table-cell">2023-06-26</TableCell>
             </TableRow>
             <TableRow>
               <TableCell>
-                <div className="font-medium">Liam Johnson</div>
+                <div className="font-medium">NFT 5</div>
                 <div className="hidden text-sm text-muted-foreground md:inline">
-                  liam@example.com
+                  Consensus NFTs
                 </div>
               </TableCell>
-              <TableCell className="hidden sm:table-cell">Send</TableCell>
+              <TableCell className="hidden sm:table-cell">4</TableCell>
               <TableCell className="hidden sm:table-cell">
                 <Badge className="text-xs" variant="secondary">
-                  Fulfilled
+                  Complete
                 </Badge>
               </TableCell>
               <TableCell className="hidden md:table-cell">2023-06-23</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>
-                <div className="font-medium">Olivia Smith</div>
-                <div className="hidden text-sm text-muted-foreground md:inline">
-                  olivia@example.com
-                </div>
-              </TableCell>
-              <TableCell className="hidden sm:table-cell">Receive</TableCell>
-              <TableCell className="hidden sm:table-cell">
-                <Badge className="text-xs" variant="outline">
-                  Declined
-                </Badge>
-              </TableCell>
-              <TableCell className="hidden md:table-cell">2023-06-24</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>
-                <div className="font-medium">Emma Brown</div>
-                <div className="hidden text-sm text-muted-foreground md:inline">
-                  emma@example.com
-                </div>
-              </TableCell>
-              <TableCell className="hidden sm:table-cell">Send</TableCell>
-              <TableCell className="hidden sm:table-cell">
-                <Badge className="text-xs" variant="secondary">
-                  Fulfilled
-                </Badge>
-              </TableCell>
-              <TableCell className="hidden md:table-cell">2023-06-26</TableCell>
             </TableRow>
           </TableBody>
         </Table>

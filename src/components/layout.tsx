@@ -1,3 +1,4 @@
+import BottomBar from "./nav/bottom-bar";
 import NavBar from "./navbar";
 
 
@@ -15,6 +16,7 @@ export default function Layout({
     <div className="min-h-screen">
         <NavBar />
         {children}
+        <BottomBar />
     </div>
   );
 }

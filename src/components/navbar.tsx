@@ -26,30 +26,42 @@ const NavBar = () => {
             </div>
           </div>
           <div>
-            <h1 className="font-medium text-text-100 text-sm leading-3 mt-2">Amendment 0</h1>
+            <h1 className="font-medium text-text-100 text-sm leading-3 mt-2">
+              Amendment 0
+            </h1>
             <h3 className="text-sm text-text-200">Equity for your data</h3>
           </div>
         </Link>
-
-        <div className="hidden md:flex items-center gap-8 text-sm text-text-200">
+        <div className="hidden md:flex items-center gap-8 text-sm text-text-200 justify-end">
           <Link href="/">Home</Link>
-          <Link href="/qr">Send</Link>
-          <Link href="/receive">Receive</Link>
+          {/* <Link href="/qr">Send</Link> */}
+          <Link href="/receive">Profile</Link>
           <Link href="/history">History</Link>
+          <Link href="/qr">Scan</Link>
+
         </div>
       </div>
 
-      <div className="w-48">
+      <div className="w-48 hidden md:flex">
         <Connect />
       </div>
 
       {isOpen && (
         <div className="md:hidden absolute top-16 left-0 w-full bg-white shadow-lg rounded-lg z-50">
           <ul className="flex flex-col items-center gap-4 py-4 text-sm text-text-200">
-            <Link href="/" onClick={toggleDropdown}>Home</Link>
-            <Link href="/qr" onClick={toggleDropdown}>Send</Link>
-            <Link href="/receive" onClick={toggleDropdown}>Receive</Link>
-            <Link href="/history" onClick={toggleDropdown}>History</Link>
+            <Link href="/" onClick={toggleDropdown}>
+              Home
+            </Link>
+            <Link href="/qr" onClick={toggleDropdown}>
+              Send
+            </Link>
+            <Link href="/receive" onClick={toggleDropdown}>
+              Receive
+            </Link>
+            <Link href="/history" onClick={toggleDropdown}>
+              History
+            </Link>
+            <Connect />
           </ul>
         </div>
       )}

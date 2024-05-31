@@ -13,12 +13,12 @@ import useNetwork from "@/hooks/useNetwork";
 
 const inter = Inter({ subsets: ["latin"] });
 
-(async () => {
-  let network = new Network();
-  console.log("starting network");
-  await network.init();
-  console.log("started network");
-})();
+// (async () => {
+//   let network = new Network();
+//   console.log("starting network");
+//   await network.init();
+//   console.log("started network");
+// })();
 
 const Home = () => {
 
@@ -29,7 +29,7 @@ const Home = () => {
     
         <>
           <Hero />
-          {loading ? (
+          {/* {loading ? (
         <>
         <div className="w-48 h-48 bg-gray-500 animate-pulse"></div>
         <p>
@@ -38,7 +38,7 @@ const Home = () => {
         </>
       ) : (
           <p>Peer ID: {peerId}</p>
-          )}
+          )} */}
         </>
 
     </div>

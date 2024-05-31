@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { CovalentClient } from "@covalenthq/client-sdk";
-import { BsThreeDots } from "react-icons/bs";
+import { IoMdCloudDownload } from "react-icons/io";
 import SendNFT from "./send-nfts";
 import { useActiveAccount } from "thirdweb/react";
 
@@ -84,7 +84,7 @@ const FetchNfts = () => {
               },
               index
             ) => (
-              <div key={index} className="nft-item flex gap-4">
+              <div key={index} className="nft-item flex gap-2">
                 {item.nft_data.map((nft, nftIndex) => (
                   <div
                     key={nftIndex}
@@ -95,11 +95,12 @@ const FetchNfts = () => {
                       alt={nft.external_data.name}
                       width={120}
                       className="rounded-lg"
-                    />
+                      />
+                      <div className="flex flex-col items-center">
                     <p className="text-sm">{nft.external_data.name}</p>
-                    {/* <h2>{item.contract_name}</h2> */}
-                    <BsThreeDots
-                      className="text-gray-400 cursor-pointer"
+                    <IoMdCloudDownload
+                    size={22}
+                      className="text-gray-600 cursor-pointer"
                       onClick={() =>
                         openSendNFTModal(
                           item.contract_address,
@@ -108,6 +109,7 @@ const FetchNfts = () => {
                         )
                       }
                     />
+                      </div>
                   </div>
                 ))}
               </div>
