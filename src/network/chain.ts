@@ -135,7 +135,7 @@ export class ChainStore {
     let operation = db?.metadata
       ?.transaction("keys", "readwrite")
       .objectStore("keys")
-      .put({ id: "key", key });
+      .put({ id: "key", key: marshalPrivateKey(key) });
     if (!operation) {
       throw new Error("no metadata db");
     }
@@ -163,7 +163,7 @@ export class ChainStore {
           resolve(null);
         } else {
           let key = operation.result.key;
-          resolve(new Ed25519PrivateKey(key._key, key._publicKey));
+          resolve(unmarshalPrivateKey(key));
         }
       };
 

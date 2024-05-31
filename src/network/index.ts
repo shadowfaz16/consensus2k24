@@ -8,7 +8,6 @@ import {
 import { peerIdFromKeys } from "@libp2p/peer-id";
 import { IDBBlockstore } from "blockstore-idb";
 import { Encoder, Decoder } from "cbor-web";
-import { CID } from "multiformats";
 import { lpStream } from "it-length-prefixed-stream";
 import { marshalPrivateKey, unmarshalPrivateKey } from "@libp2p/crypto/keys";
 import {
@@ -221,7 +220,11 @@ export class Network {
     const { bootstrapAddrs, relayListenAddrs } =
       await getBootstrapMultiaddrs(delegatedClient);
 
+    let key = await ChainStore.key();
+    let peerId = await peerIdFromKeys(key.public.bytes, key.bytes);
+
     this._libp2p = await createLibp2p({
+      peerId,
       datastore,
       addresses: {
         listen: [
