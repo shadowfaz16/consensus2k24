@@ -1,11 +1,14 @@
 import { generateKeyPair } from "@libp2p/crypto/keys";
+import { IDBBlockstore } from "blockstore-idb";
 import { BaseBlock, ChainStore, GenesisBlock } from "./chain";
 import { Ed25519 } from "@libp2p/interface";
 import { test, expect } from "vitest";
 import "fake-indexeddb/auto";
 
 test("test", async () => {
-  await ChainStore.init();
+  const blockstore = new IDBBlockstore("blocks");
+  await blockstore.open();
+  await ChainStore.init(blockstore);
   expect(await ChainStore.roots()).toEqual([]);
   console.log("test");
   let private_key_1 = await generateKeyPair(Ed25519);
@@ -26,4 +29,8 @@ test("test", async () => {
   expect(await ChainStore.key()).toEqual(private_key_1);
   await ChainStore.putKey(private_key_2);
   expect(await ChainStore.key()).toEqual(private_key_2);
+  let block6 = await ChainStore.child(block1.cid);
+  expect(block2).toEqual(block6);
+  let block7 = await ChainStore.child(block2.cid);
+  expect(block7).toEqual(undefined);
 });
