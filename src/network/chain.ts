@@ -90,6 +90,21 @@ export class ChainStore {
     });
     db = self;
   }
+  static async activeAssets(): Promise<CID[]> {
+    let assets: CID[] = [];
+    let parent = await this.genesis();
+    if (parent == null) {
+      return assets;
+    }
+    let child = await this.child(parent.cid);
+    while (child != null) {
+      if (child.block_type == "Accept" || child.block_type == "Import") {
+        let data = child.data as any;
+        assets.push(data.asset);
+      }
+    }
+    return assets;
+  }
   static async putGenesis(root: CID) {
     let operation = db?.metadata
       ?.transaction("self", "readwrite")
