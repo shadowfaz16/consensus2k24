@@ -7,11 +7,12 @@ import { PrivateKey, PublicKey } from "@libp2p/interface";
 import { Encoder, Decoder } from "cbor-web";
 
 let db: ChainStore | null = null;
-export type Data = GenesisBlock;
+
+export type Data = GenesisBlock | ImportAsset | SendAsset | AcceptAsset;
 export type GenesisBlock = {
   key: PublicKey;
 };
-export type ImportBlock = {
+export type ImportAsset = {
   chain: "RSK";
   block_height: number;
   tx_hash: string;
@@ -19,7 +20,18 @@ export type ImportBlock = {
   to_address: string;
   asset: CID;
 };
-
+export type SendAsset = {
+  sender_address: CID;
+  receiver_address: CID;
+  contract: CID;
+  asset: CID;
+};
+export type AcceptAsset = {
+  sender_address: CID;
+  receiver_address: CID;
+  contract: CID;
+  asset: CID;
+};
 export type BaseBlock = {
   root: CID<unknown, 113, 18, 1> | null;
   parent: CID<unknown, 113, 18, 1> | null;
