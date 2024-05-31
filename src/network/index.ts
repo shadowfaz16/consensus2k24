@@ -298,9 +298,8 @@ export class Network {
     while (true) {
       try {
         this._libp2p = await createLibp2p(config);
-      } catch (e) {
         break;
-      }
+      } catch (e) {}
     }
     if (this._libp2p == null) {
       throw new Error("impossible");
