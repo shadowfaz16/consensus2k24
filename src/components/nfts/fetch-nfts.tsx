@@ -1,30 +1,64 @@
 import React, { useEffect, useState } from "react";
 import { CovalentClient } from "@covalenthq/client-sdk";
 import { BsThreeDots } from "react-icons/bs";
+import SendNFT from "./send-nfts";
+import { useActiveAccount } from "thirdweb/react";
 
 
 const FetchNfts = () => {
+  const wallet = useActiveAccount();
+  const userWallet = wallet?.address;
+  console.log("User Walletttt: ", userWallet);
   const [nftData, setNftData] = useState<[]>([]);
+  const [isSendNFTModalOpen, setIsSendNFTModalOpen] = useState(false);
+  const [selectedNFT, setSelectedNFT] = useState<{
+    contract_address: string;
+    token_id: number;
+    image_url: string;
+  } | null>(null);
 
+  const openSendNFTModal = (
+    contract_address: string,
+    token_id: bigint,
+    image_url: string
+  ) => {
+    setSelectedNFT({ contract_address, token_id: Number(token_id), image_url }); 
+    setIsSendNFTModalOpen(true);
+  };
+  console.log("Selected NFT: ", selectedNFT);
+  console.log("TOKEN ID: ", (selectedNFT?.token_id));
+
+  const closeSendNFTModal = () => {
+    setIsSendNFTModalOpen(false);
+    setSelectedNFT(null);
+  };
+
+  // 0x68a7D0971d886Cf5CdB4fDd63198B695293e5E51
+  // 0xa75F930B9f42f9e5629838fa72b8A96Ee877A6Ed 
+
+  const fetchNftData = async () => {
+    try {
+      const client = new CovalentClient("cqt_rQJQcxMbk6yHpHYCRhVcXV4kvfwd");
+      const resp = await client.NftService.getNftsForAddress(
+        "eth-sepolia",
+        userWallet as string,
+        { withUncached: true }
+      );
+
+      setNftData(resp.data.items as any);
+    } catch (error) {
+      console.error("Error fetching NFT data:", error);
+    }
+  };
   useEffect(() => {
-    const fetchNftData = async () => {
-      try {
-        const client = new CovalentClient("cqt_rQJQcxMbk6yHpHYCRhVcXV4kvfwd");
-        const resp = await client.NftService.getNftsForAddress(
-          "eth-sepolia",
-          "0x68a7D0971d886Cf5CdB4fDd63198B695293e5E51",
-          { withUncached: true }
-        );
+    if (userWallet) {
+      fetchNftData();
+    }
+  }, [userWallet]);
 
-        console.log("user NFTs: ", resp.data);
-        setNftData(resp.data.items as any);
-      } catch (error) {
-        console.error("Error fetching NFT data:", error);
-      }
-    };
-
+  const handleTransactionSuccess = () => {
     fetchNftData();
-  }, []);
+  };
 
   return (
     <div className="flex flex-col gap-6 my-2 bg-white p-7 rounded-lg shadow-lg w-full">
@@ -39,7 +73,9 @@ const FetchNfts = () => {
           {nftData.map(
             (
               item: {
+                contract_address: string;
                 nft_data: {
+                  token_id: bigint;
                   external_data: {
                     image: string | undefined;
                     name: string | undefined;
@@ -62,7 +98,16 @@ const FetchNfts = () => {
                     />
                     <p className="text-sm">{nft.external_data.name}</p>
                     {/* <h2>{item.contract_name}</h2> */}
-                    <BsThreeDots className="text-gray-400" />
+                    <BsThreeDots
+                      className="text-gray-400 cursor-pointer"
+                      onClick={() =>
+                        openSendNFTModal(
+                          item.contract_address,
+                          nft.token_id,
+                          nft.external_data.image as string
+                        )
+                      }
+                    />
                   </div>
                 ))}
               </div>
@@ -72,6 +117,22 @@ const FetchNfts = () => {
       ) : (
         <p>Loading...</p>
       )}
+      {isSendNFTModalOpen ? (
+        <div
+          className="
+          fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-20
+          "
+        >
+          <SendNFT
+            isOpen={isSendNFTModalOpen}
+            onClose={closeSendNFTModal}
+            contract_address={selectedNFT?.contract_address as string}
+            token_id={Number(selectedNFT?.token_id) as number}
+            image_url={selectedNFT?.image_url as string}
+            onTransactionSuccess={handleTransactionSuccess} // Pass the handler function
+          />
+        </div>
+      ) : null}
     </div>
   );
 };

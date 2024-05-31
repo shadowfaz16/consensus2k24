@@ -27,9 +27,6 @@ export default function Component() {
 
   return (
     <>
-    <button onClick={ApiServices}
-    className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-    >Fetch NFTs</button>
     <Card>
       <CardHeader className="px-7">
         <CardTitle>Txn History</CardTitle>

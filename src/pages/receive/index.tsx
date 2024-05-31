@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import QRCodeGenerator from "@/components/qr/QrGenerator";
 import Layout from "@/components/layout";
 import { FaRegUserCircle, FaEye, FaRegEyeSlash } from "react-icons/fa";
@@ -12,12 +12,15 @@ import { keys as libp2pKeys } from "@libp2p/crypto";
 import { ethers } from "ethers";
 import SendNFT from "@/components/nfts/send-nfts";
 import OffChainNFTs from "@/components/nfts/off-chain-nfts";
+import ImageUploader from "@/components/image/image-fetch";
 
 const Profile = () => {
   const { loading, peerId, privateKey, publicKey, peerNumber } = useNetwork();
   const [showQr, setShowQr] = React.useState(false);
   const [blocks, setBlocks] = React.useState<BaseBlock[]>([]);
   const { ethers } = require("ethers");
+
+
   let userGeneratedWallet;
 
   const handleInitializeChainStore = async () => {
@@ -125,7 +128,6 @@ const Profile = () => {
           <FetchNfts />
           <OffChainNFTs />
         </div>
-          <SendNFT />
       </div>
       <div className="max-w-7xl mx-auto w-full">
         <Table />

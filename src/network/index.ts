@@ -35,6 +35,7 @@ const BOOTSTRAP_PEER_IDS = [
 import { Helia, createHelia } from "helia";
 import { IDBDatastore } from "datastore-idb";
 import { unixfs } from "@helia/unixfs";
+import { CID } from "multiformats";
 
 export class Network {
   private _libp2p: Libp2p | null = null;
@@ -51,10 +52,12 @@ export class Network {
     }
     return this._helia;
   }
-  async addFile(bytes: Uint8Array) {
+  async addFile(bytes: Uint8Array): Promise<CID> {
     const fs = unixfs(this.helia);
     const encoder = new TextEncoder();
     const cid = await fs.addBytes(bytes);
+
+    return cid;
   }
   async init() {
     const blockstore = new IDBBlockstore("blocks");
