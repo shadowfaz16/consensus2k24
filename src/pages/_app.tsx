@@ -17,9 +17,9 @@ const MyApp: AppType = ({ Component, pageProps }: AppPropsWithLayout) => {
   const getLayout = Component.getLayout ?? ((page) => page);
 
   return getLayout(
-  <ThirdwebProvider>
+
   <Component {...pageProps} />
-  </ThirdwebProvider>
+
 )
 }
 

@@ -36,8 +36,8 @@ const NavBar = () => {
           <Link href="/">Home</Link>
           {/* <Link href="/qr">Send</Link> */}
           <Link href="/receive">Profile</Link>
-          <Link href="/history">History</Link>
-          <Link href="/qr">Scan</Link>
+          {/* <Link href="/history">History</Link>
+          <Link href="/qr">Scan</Link> */}
 
         </div>
       </div>

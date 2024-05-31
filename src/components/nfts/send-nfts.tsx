@@ -158,7 +158,7 @@ const SendNFT = ({
           <input
             type="text"
             placeholder="Receiver Address"
-            className="p-2 w-full"
+            className="p-2 w-full border-r"
             value={scannedValue}
             onChange={(e) => setScannedValue(e.target.value)}
           />
