@@ -83,16 +83,6 @@ const SendNFT = ({
       : "0xEF267Bbd18e11e703D054a01ded08b697029cc19",
   });
 
-  const {
-    mutateAsync: sendTransaction,
-    isPending,
-    isError,
-    error,
-    status,
-    isSuccess,
-    data,
-    variables,
-  } = useSendTransaction();
 
   console.log("CID FOR IMAGE: ", cid);
 
@@ -173,13 +163,9 @@ const SendNFT = ({
         </div>
         <button
           className={`mt-4 px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50`}
-          disabled={isPending || !scannedValue}
+          disabled={!scannedValue}
         >
-          {isPending && "Sending..."}
-          {isSuccess && !transactionInfo?.block_height && "Sending..."}
-          {isSuccess && transactionInfo?.block_height && "Sent!"}
-          {!isPending && !isSuccess && !error && "Send"}
-          {isError && "Error"}
+          Send NFT
         </button>
         {transactionInfo !== null && (
           <button
