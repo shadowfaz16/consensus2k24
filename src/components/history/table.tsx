@@ -25,27 +25,27 @@ export default function Component() {
   const user_wallet = wallet?.address;
   const [transactionData, setTransactionData] = useState<Transaction[]>([]);
 
-//   const ApiServices = async () => {
-//     const client = new CovalentClient("cqt_rQJQcxMbk6yHpHYCRhVcXV4kvfwd");
-//     try {
-//         const transactions = [];
-//         for await (const resp of client.TransactionService.getAllTransactionsForAddress("eth-sepolia", user_wallet as string, {"noLogs": true,"blockSignedAtAsc": false})) {
-//             transactions.push(resp);
-//         }
-//         setTransactionData(transactions); // Update the state with the fetched transactions
-//     } catch (error) {
-//         console.log(error);
-//     }
-// }
+  const ApiServices = async () => {
+    const client = new CovalentClient("cqt_rQJQcxMbk6yHpHYCRhVcXV4kvfwd");
+    try {
+        const transactions = [];
+        for await (const resp of client.TransactionService.getAllTransactionsForAddress("eth-sepolia", user_wallet as string, {"noLogs": true,"blockSignedAtAsc": false})) {
+            transactions.push(resp);
+        }
+        setTransactionData(transactions); // Update the state with the fetched transactions
+    } catch (error) {
+        console.log(error);
+    }
+}
 
-// console.log("transactionData", transactionData);
+console.log("transactionData", transactionData);
 
-// useEffect(() => {
-//     if (user_wallet) {
-//         ApiServices();
-//     }
-// }
-// , [user_wallet]);
+useEffect(() => {
+    if (user_wallet) {
+        ApiServices();
+    }
+}
+, [user_wallet]);
 
   return (
     <>
@@ -57,91 +57,36 @@ export default function Component() {
       <CardContent>
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Asset</TableHead>
-              <TableHead className="hidden sm:table-cell">Token ID</TableHead>
+            <TableRow className="bg-accent">
+              <TableHead>From</TableHead>
+              <TableHead className="hidden sm:table-cell">To</TableHead>
               <TableHead className="hidden sm:table-cell">Status</TableHead>
               <TableHead className="hidden md:table-cell">Date</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow className="bg-accent">
+            {
+              transactionData.slice(0, 10).map((transaction, index) => {
+                return (
+            <TableRow className="">
               <TableCell>
-                <div className="font-medium">NFT 1</div>
-                <div className="hidden text-sm text-muted-foreground md:inline">
+                <div className="font-medium py-2">{transaction.from_address}</div>
+                {/* <div className="hidden text-sm text-muted-foreground md:inline">
                   Consensus NFTs
-                </div>
+                </div> */}
               </TableCell>
-              <TableCell className="hidden sm:table-cell">0</TableCell>
+              <TableCell className="hidden sm:table-cell">{transaction.to_address}</TableCell>
               <TableCell className="hidden sm:table-cell">
                 <Badge className="text-xs" variant="secondary">
-                  Complete
+                  {transaction.successful ? "Success" : "Failed"}
                 </Badge>
               </TableCell>
-              <TableCell className="hidden md:table-cell">2023-06-23</TableCell>
+              <TableCell className="hidden md:table-cell">{transaction.block_signed_at.toDateString()}</TableCell>
             </TableRow>
-            <TableRow>
-              <TableCell>
-                <div className="font-medium">NFT 2</div>
-                <div className="hidden text-sm text-muted-foreground md:inline">
-                  Consensus NFTs
-                </div>
-              </TableCell>
-              <TableCell className="hidden sm:table-cell">1</TableCell>
-              <TableCell className="hidden sm:table-cell">
-                <Badge className="text-xs" variant="outline">
-                  Complete
-                </Badge>
-              </TableCell>
-              <TableCell className="hidden md:table-cell">2023-06-24</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>
-                <div className="font-medium">NFT 3</div>
-                <div className="hidden text-sm text-muted-foreground md:inline">
-                  Consensus NFTs
-                </div>
-              </TableCell>
-              <TableCell className="hidden sm:table-cell">
-                2
-              </TableCell>
-              <TableCell className="hidden sm:table-cell">
-                <Badge className="text-xs" variant="secondary">
-                  Complete
-                </Badge>
-              </TableCell>
-              <TableCell className="hidden md:table-cell">2023-06-25</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>
-                <div className="font-medium">NFT 4</div>
-                <div className="hidden text-sm text-muted-foreground md:inline">
-                  Consensus NFTs
-                </div>
-              </TableCell>
-              <TableCell className="hidden sm:table-cell">3</TableCell>
-              <TableCell className="hidden sm:table-cell">
-                <Badge className="text-xs" variant="secondary">
-                  Complete
-                </Badge>
-              </TableCell>
-              <TableCell className="hidden md:table-cell">2023-06-26</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>
-                <div className="font-medium">NFT 5</div>
-                <div className="hidden text-sm text-muted-foreground md:inline">
-                  Consensus NFTs
-                </div>
-              </TableCell>
-              <TableCell className="hidden sm:table-cell">4</TableCell>
-              <TableCell className="hidden sm:table-cell">
-                <Badge className="text-xs" variant="secondary">
-                  Complete
-                </Badge>
-              </TableCell>
-              <TableCell className="hidden md:table-cell">2023-06-23</TableCell>
-            </TableRow>
+                )
+              }
+              )
+            }
           </TableBody>
         </Table>
       </CardContent>

@@ -17,6 +17,8 @@ import { CID } from "multiformats";
 import useNetwork from "@/hooks/useNetwork";
 import { keys as libp2pKeys } from "@libp2p/crypto";
 import useStore from "@/store/store";
+import Link from "next/link";
+import useBlockStore from "@/store/blockStore";
 
 interface TransactionInfo {
   block_height: number;
@@ -31,7 +33,7 @@ interface SendNFTProps {
   image_url?: string;
   isOpen?: boolean;
   onClose?: () => void;
-  onTransactionSuccess?: () => void; // Add this prop
+  onTransactionSuccess: () => void; // Add this prop
 }
 
 // create the client with your clientId, or secretKey if in a server environment
@@ -60,6 +62,10 @@ const BurnNFT = ({
 
   const [allSuccess, setAllSuccess] = useState<boolean>(false);
   const { privateKey, publicKey } = useNetwork();
+
+  const addBlock = useBlockStore((state) => state.addBlock);
+  const lastBlock = useBlockStore((state) => state.lastBlock);
+
 
   const [cid, setCid] = useState<CID | null>(null);
 
@@ -107,6 +113,7 @@ const BurnNFT = ({
   useEffect(() => {
     if (transactionInfo?.block_height && cid) {
       createBlock();
+      onTransactionSuccess();
     }
   }, [transactionInfo, cid]);
  
@@ -145,14 +152,15 @@ const BurnNFT = ({
           return;
         }
         console.log("Creating new block...")
-        const genesis = await ChainStore.genesis();
-        if (genesis == null) {
-          console.error("Missing genesis block");
+        const parentBlock = lastBlock || (await ChainStore.genesis());
+        if (!parentBlock) {
+          console.error("Missing parent block");
           return;
         }
+
         console.log("almost done: ");
         const newBlock = await ChainStore.create(
-          genesis,
+          parentBlock,
           {
             type: "Import",
             chain: "RSK",
@@ -165,25 +173,13 @@ const BurnNFT = ({
           private_key,
         );
         console.log("New Block Created: ", newBlock);
+        addBlock(newBlock); // Add the new block to the global state
         setAllSuccess(true);
       } catch (error) {
         console.error("Error creating new block: ", error);
       }
     }
   };
-
-  // const allFunctionsTogether = async () => {
-  //   setAllSuccess(false);
-  //   try {
-  //     await call(); // Initiates the transaction
-  //     console.log("Transaction Info Fetched Successfully!");
-  //     await createBlock();
-  //     setAllSuccess(true);
-  //     console.log("All functions executed successfully!");
-  //   } catch (error) {
-  //     console.error("Error in allFunctionsTogether:", error);
-  //   }
-  // };
 
   return (
     <ThirdwebProvider>
@@ -206,20 +202,16 @@ const BurnNFT = ({
           className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
           disabled={isPending}
         >
-          {isPending && "Sending..."}
-          {isSuccess && !transactionInfo && "Sending..."}
-          {isSuccess && transactionInfo && !allSuccess && "Creating block"}
-          {!isPending && !isSuccess && !error && "Send"}
+          {isPending && "Burning..."}
+          {isSuccess && !transactionInfo && "Burning..."}
+          {isSuccess && transactionInfo && !allSuccess && "Creating private block"}
+          {!isPending && !isSuccess && !error && "Burn"}
           {isError && "Error"}
-          {allSuccess && "All done!"}
+          {allSuccess && "New block has been minted!"}
         </button>
         {transactionInfo !== null && (
           <div className="mt-4 p-4 bg-gray-100 rounded">
-            <h2 className="font-medium">Transaction Info</h2>
-            <p>Block Height: {transactionInfo?.block_height}</p>
-            <p>Transaction Hash: {transactionInfo?.tx_hash}</p>
-            <p>From Address: {transactionInfo?.from_address}</p>
-            <p>To Address: {transactionInfo?.to_address}</p>
+            <Link target="_blank" href={`https://sepolia.etherscan.io/tx/${transactionInfo.tx_hash}`} className="font-medium text-sm text-blue-400 hover:text-blue-600">View your transaction in the scanner!</Link>
           </div>
         )}
         <ImageUploader

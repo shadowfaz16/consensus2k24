@@ -6,7 +6,6 @@ import { useActiveAccount } from "thirdweb/react";
 import BurnNft from "./burn-nft";
 import useStore from "@/store/store";
 
-
 const FetchNfts = () => {
   const wallet = useActiveAccount();
   const userWallet = wallet?.address;
@@ -26,23 +25,23 @@ const FetchNfts = () => {
     token_id: bigint,
     image_url: string
   ) => {
-    setSelectedNFT({ contract_address, token_id: Number(token_id), image_url });  
+    setSelectedNFT({ contract_address, token_id: Number(token_id), image_url });
     setIsSendNFTModalOpen(true);
   };
   console.log("Selected NFT: ", selectedNFT);
-  console.log("TOKEN ID: ", (selectedNFT?.token_id));
+  console.log("TOKEN ID: ", selectedNFT?.token_id);
 
-  const closeSendNFTModal = () => { 
+  const closeSendNFTModal = () => {
     setIsSendNFTModalOpen(false);
     setSelectedNFT(null);
   };
 
   // 0x68a7D0971d886Cf5CdB4fDd63198B695293e5E51
-  // 0xa75F930B9f42f9e5629838fa72b8A96Ee877A6Ed 
+  // 0xa75F930B9f42f9e5629838fa72b8A96Ee877A6Ed
 
   const fetchNftData = async () => {
     try {
-      const client = new CovalentClient("cqt_rQJQcxMbk6yHpHYCRhVcXV4kvfwd"); 
+      const client = new CovalentClient("cqt_rQJQcxMbk6yHpHYCRhVcXV4kvfwd");
       const resp = await client.NftService.getNftsForAddress(
         "eth-sepolia",
         generatedUserWallet as string,
@@ -67,9 +66,9 @@ const FetchNfts = () => {
   return (
     <div className="flex flex-col gap-6 my-2 bg-white p-7 rounded-lg shadow-lg w-full">
       <div>
-        <h1 className="font-medium text-lg">On chain assets</h1>
+        <h1 className="font-medium text-lg">Off chain assets</h1>
         <p className="text-sm text-gray-500">
-          Here are the current assets owned by your wallet
+          Here are the assets you've burned and stored in your private network
         </p>
       </div>
       {nftData ? (
@@ -99,22 +98,22 @@ const FetchNfts = () => {
                       alt={nft.external_data.name}
                       width={120}
                       className="rounded-lg"
-                      />
-                      <div className="flex flex-col items-center">
-                    <p className="text-sm">{nft.external_data.name}</p>
-                    <IoIosSend
-                    size={22}
-                      className="text-gray-600 cursor-pointer"
-                      onClick={() =>
-                        openSendNFTModal(
-                          item.contract_address,
-                          nft.token_id,
-                          nft.external_data.image as string
-                        )
-                      }
                     />
-                      </div>
-                  </div> 
+                    <div className="flex flex-col items-center">
+                      <p className="text-sm">{nft.external_data.name}</p>
+                      <IoIosSend
+                        size={22}
+                        className="text-gray-600 cursor-pointer"
+                        onClick={() =>
+                          openSendNFTModal(
+                            item.contract_address,
+                            nft.token_id,
+                            nft.external_data.image as string
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
                 ))}
               </div>
             )
@@ -127,7 +126,7 @@ const FetchNfts = () => {
         <div
           className="
           fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-20
-          "
+          " 
         >
           <SendNFT
             isOpen={isSendNFTModalOpen}
