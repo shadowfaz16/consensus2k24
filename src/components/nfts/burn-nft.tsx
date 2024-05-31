@@ -76,7 +76,7 @@ const BurnNFT = ({
   // connect to your contract
   const contract = getContract({
     client,
-    chain: defineChain(30),
+    chain: defineChain(11155111),
     address: contract_address
       ? contract_address
       : "0xEF267Bbd18e11e703D054a01ded08b697029cc19",
@@ -123,7 +123,7 @@ const BurnNFT = ({
     try {
       const client = new CovalentClient("cqt_rQJQcxMbk6yHpHYCRhVcXV4kvfwd");
       const resp = await client.TransactionService.getTransaction(
-        "rsk-mainnet",
+        "eth-sepolia",
         txHash,
       );
       const { block_height, tx_hash, from_address, to_address } =
@@ -168,7 +168,7 @@ const BurnNFT = ({
             tx_hash: transactionInfo.tx_hash,
             sender_address: transactionInfo.from_address,
             to_address: transactionInfo.to_address,
-            asset: token_id,
+            asset: cid,
           },
           private_key,
         );
@@ -190,9 +190,9 @@ const BurnNFT = ({
         >
           <FaTimes />
         </button>
-        <h1 className="font-medium">Migrate your NFT</h1>
+        <h1 className="font-medium">Burn your NFT</h1>
         <p className="text-sm">
-          Migrate your NFT on to your private network
+          Burn your NFT and store it in your private network
         </p>
         {/* <p>Contract address: {contract_address}</p>
         <p>Token Id: {token_id}</p>
@@ -202,16 +202,16 @@ const BurnNFT = ({
           className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
           disabled={isPending}
         >
-          {isPending && "Migrating..."}
-          {isSuccess && !transactionInfo && "Migrating..."}
+          {isPending && "Burning..."}
+          {isSuccess && !transactionInfo && "Burning..."}
           {isSuccess && transactionInfo && !allSuccess && "Creating private block"}
-          {!isPending && !isSuccess && !error && "Migrate"}
+          {!isPending && !isSuccess && !error && "Burn"}
           {isError && "Error"}
           {allSuccess && "New block has been minted!"}
         </button>
         {transactionInfo !== null && (
           <div className="mt-4 p-4 bg-gray-100 rounded">
-            <Link target="_blank" href={`https://explorer.rootstock.io/tx/${transactionInfo.tx_hash}`} className="font-medium text-sm text-blue-400 hover:text-blue-600">View your transaction in the scanner!</Link>
+            <Link target="_blank" href={`https://sepolia.etherscan.io/tx/${transactionInfo.tx_hash}`} className="font-medium text-sm text-blue-400 hover:text-blue-600">View your transaction in the scanner!</Link>
           </div>
         )}
         <ImageUploader

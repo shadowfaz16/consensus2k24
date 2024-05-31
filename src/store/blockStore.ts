@@ -17,11 +17,11 @@ const useBlockStore = create<BlockchainState>()(persist((set) => ({
   setLastBlock: (block) => set({ lastBlock: block }),
   addBlock: (block) => set((state) => ({
     blocks: [...state.blocks, block],
+    lastBlock: block,
   })),
 }),
 {
   name: 'block-store',
-  getStorage: () => localStorage, // or sessionStorage
 })
 );
 

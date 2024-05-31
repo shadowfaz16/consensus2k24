@@ -114,7 +114,7 @@ const SendNFT = ({
             tx_hash: transactionInfo.tx_hash,
             sender_address: transactionInfo.from_address,
             to_address: transactionInfo.to_address,
-            asset: token_id,
+            asset: cid,
           },
           private_key
         );

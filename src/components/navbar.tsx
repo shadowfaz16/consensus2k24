@@ -36,7 +36,6 @@ const NavBar = () => {
           <Link href="/">Home</Link>
           {/* <Link href="/qr">Send</Link> */}
           <Link href="/receive">Profile</Link>
-          <Link href="/mint">Mint</Link>
           {/* <Link href="/history">History</Link>
           <Link href="/qr">Scan</Link> */}
 
