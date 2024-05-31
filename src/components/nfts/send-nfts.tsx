@@ -138,7 +138,7 @@ const SendNFT = ({
   return (
     <ThirdwebProvider>
       <div className="p-7 bg-white rounded-lg shadow-lg relative w-full overflow-x-scroll md:w-[50%] z-20"
-      onClick={() => setScan(!scan)}
+      onClick={() => setScan(false)}
       >
         <button
           onClick={onClose}
@@ -164,7 +164,11 @@ const SendNFT = ({
           />
           <IoScanSharp
             className="text-2xl text-gray-500 mx-2"
-            onClick={() => setScan(!scan)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setScan(true);
+            }
+            }
           />
         </div>
         <button
