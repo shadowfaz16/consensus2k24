@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { CovalentClient } from "@covalenthq/client-sdk";
+import { BsThreeDots } from "react-icons/bs";
+
 
 const FetchNfts = () => {
   const [nftData, setNftData] = useState<[]>([]);
@@ -60,6 +62,7 @@ const FetchNfts = () => {
                     />
                     <p className="text-sm">{nft.external_data.name}</p>
                     {/* <h2>{item.contract_name}</h2> */}
+                    <BsThreeDots className="text-gray-400" />
                   </div>
                 ))}
               </div>

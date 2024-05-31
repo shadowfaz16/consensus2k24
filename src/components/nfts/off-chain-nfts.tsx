@@ -27,9 +27,9 @@ const OffChainNFTs = () => {
   return (
     <div className="flex flex-col gap-6 my-2 bg-white p-7 rounded-lg shadow-lg w-full">
       <div>
-        <h1 className="font-medium text-lg">On chain assets</h1>
+        <h1 className="font-medium text-lg">Off chain assets</h1>
         <p className="text-sm text-gray-500">
-          Here are the current assets owned by your wallet
+          Here are the current burned assets now in your private network
         </p>
       </div>
       {nftData ? (
