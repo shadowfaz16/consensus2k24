@@ -232,7 +232,7 @@ export class Network {
       await ChainStore.putGenesis(block.cid);
     }
 
-    this._libp2p = await createLibp2p({
+    let config = {
       peerId,
       datastore,
       addresses: {
@@ -293,7 +293,18 @@ export class Network {
           peerInfoMapper: removePrivateAddressesMapper,
         }),
       },
-    });
+    };
+
+    while (true) {
+      try {
+        this._libp2p = await createLibp2p(config);
+      } catch (e) {
+        break;
+      }
+    }
+    if (this._libp2p == null) {
+      throw new Error("impossible");
+    }
     this._helia = await createHelia({
       datastore,
       blockstore,
