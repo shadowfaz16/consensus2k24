@@ -53,7 +53,7 @@ const Claim = () => {
           <li>
             - Claim your free NFT on chain{" "}
             <span className="text-sm">
-              (you'll only need to pay for gas{" "}
+              (you&apos;ll only need to pay for gas{" "}
               <span className="font-medium">which is cheap on RSK!</span>)
             </span>
           </li>
