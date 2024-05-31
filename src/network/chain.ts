@@ -11,6 +11,14 @@ export type Data = GenesisBlock;
 export type GenesisBlock = {
   key: PublicKey;
 };
+export type ImportBlock = {
+  chain: "RSK";
+  block_height: number;
+  tx_hash: string;
+  sender_address: string;
+  to_address: string;
+  asset: CID;
+};
 
 export type BaseBlock = {
   root: CID<unknown, 113, 18, 1> | null;
