@@ -1,5 +1,8 @@
 import { kadDHT, removePrivateAddressesMapper } from "@libp2p/kad-dht";
 import { IDBBlockstore } from "blockstore-idb";
+import { Encoder, Decoder } from "cbor-web";
+import { CID } from "multiformats";
+import { lpStream } from "it-length-prefixed-stream";
 import {
   createDelegatedRoutingV1HttpApiClient,
   DelegatedRoutingV1HttpApiClient,
@@ -17,6 +20,7 @@ import type {
   Message,
   SignedMessage,
   PeerId,
+  IncomingStreamData,
 } from "@libp2p/interface";
 import { webSockets } from "@libp2p/websockets";
 import { webTransport } from "@libp2p/webtransport";
@@ -36,9 +40,41 @@ import { Helia, createHelia } from "helia";
 import { IDBDatastore } from "datastore-idb";
 import { unixfs } from "@helia/unixfs";
 
+const SYNC_PROTOCOL = "/amendment-zero/sync/1";
+type SyncRequest = {
+  root: CID;
+  head: CID;
+};
+
 export class Network {
   private _libp2p: Libp2p | null = null;
   private _helia: Helia | null = null;
+  async syncHandler(data: IncomingStreamData) {
+    const stream = lpStream(data.stream);
+    let msg = (await stream.read()).subarray();
+    // TODO handle proper parsing
+    let req = JSON.parse(new TextDecoder().decode(msg)) as SyncRequest;
+    let prev = req.head;
+    let next = await ChainStore.child(prev);
+    while (next) {
+      prev = next.cid;
+      await stream.write(ChainStore.serialize(next));
+    }
+  }
+  async sync(peer: PeerId, root: CID, head: CID) {
+    let req = Encoder.encode({
+      root: root.bytes,
+      head: head.bytes,
+    });
+    const stream = lpStream(
+      await this.libp2p.dialProtocol(peer, SYNC_PROTOCOL),
+    );
+    stream.write(req);
+    let next = (await stream.read()).subarray();
+    while (next.length > 0) {
+      let block = ChainStore.deserialize(next);
+    }
+  }
   get libp2p(): Libp2p {
     if (this._libp2p == null) {
       throw new Error("Network not initalized");
@@ -53,8 +89,18 @@ export class Network {
   }
   async addFile(bytes: Uint8Array) {
     const fs = unixfs(this.helia);
-    const encoder = new TextEncoder();
     const cid = await fs.addBytes(bytes);
+  }
+  async getFile(cid: CID): Promise<Uint8Array> {
+    const fs = unixfs(this.helia);
+    let result = new Uint8Array(0);
+    for await (const chunk of fs.cat(cid)) {
+      let target = new Uint8Array(result.length + chunk.length);
+      target.set(result, 0);
+      target.set(chunk, result.length);
+      result = target;
+    }
+    return result;
   }
   async init() {
     const blockstore = new IDBBlockstore("blocks");

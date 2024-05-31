@@ -1,4 +1,9 @@
-import { generateKeyPair, Ed25519PrivateKey } from "@libp2p/crypto/keys";
+import {
+  generateKeyPair,
+  Ed25519PrivateKey,
+  unmarshalPrivateKey,
+  marshalPrivateKey,
+} from "@libp2p/crypto/keys";
 import { Ed25519 } from "@libp2p/interface";
 import { IDBBlockstore } from "blockstore-idb";
 import { CID, MultihashDigest } from "multiformats";
@@ -176,6 +181,99 @@ export class ChainStore {
     if (db == null) {
       throw new Error("db not initialized");
     }
+  }
+  static serialize(block: BaseBlock): Uint8Array {
+    let serializedData = new Uint8Array(0);
+    if (block.data.type === "Genesis") {
+      serializedData = Encoder.encode({
+        type: block.data.type,
+        key: marshalPrivateKey(block.data.key),
+      });
+    } else if (block.data.type === "Import") {
+      serializedData = Encoder.encode({
+        type: block.data.type,
+        chain: block.data.chain,
+        block_height: block.data.block_height,
+        tx_hash: block.data.tx_hash,
+        sender_address: block.data.sender_address,
+        to_address: block.data.to_address,
+        asset: block.data.asset.bytes,
+      });
+    } else if (block.data.type === "Accept") {
+      serializedData = Encoder.encode({
+        type: block.data.type,
+        sender_address: block.data.sender_address.bytes,
+        receiver_address: block.data.receiver_address.bytes,
+        contract: block.data.contract.bytes,
+        asset: block.data.asset.bytes,
+      });
+    } else if (block.data.type === "Send") {
+      serializedData = Encoder.encode({
+        type: block.data.type,
+        sender_address: block.data.sender_address.bytes,
+        receiver_address: block.data.receiver_address.bytes,
+        contract: block.data.contract.bytes,
+        asset: block.data.asset.bytes,
+      });
+    }
+    throw new Error("unexpected blocktype");
+  }
+  static async deserialize(bytes: Uint8Array): Promise<BaseBlock> {
+    let block = await Decoder.decodeFirst(bytes);
+    if (block.root) {
+      let [cid] = CID.decodeFirst(block.root);
+      block.root = cid;
+    }
+    if (block.parent) {
+      let [cid] = CID.decodeFirst(block.parent);
+      block.parent = cid;
+    }
+    if (block.cid) {
+      let [cid] = CID.decodeFirst(block.cid);
+      block.cid = cid;
+    }
+    let data = await Decoder.decodeFirst(block.data);
+    if (block.data_type === "Genesis") {
+      data.key = await unmarshalPrivateKey(data.key);
+    } else if (block.data_type === "Import") {
+      let [cid] = CID.decodeFirst(block.cid);
+      data.asset.cid = cid;
+    } else if (block.data_type === "Accept") {
+      let [sender_address] = CID.decodeFirst(block.sender_address);
+      block.sender_address = sender_address;
+      let [receiver_address] = CID.decodeFirst(block.receiver_address);
+      block.receiver_address = receiver_address;
+      let [contract] = CID.decodeFirst(block.contract);
+      block.contract = contract;
+      let [asset] = CID.decodeFirst(block.asset);
+      block.asset = asset;
+    } else if (block.data_type === "Send") {
+      let [sender_address] = CID.decodeFirst(block.sender_address);
+      block.sender_address = sender_address;
+      let [receiver_address] = CID.decodeFirst(block.receiver_address);
+      block.receiver_address = receiver_address;
+      let [contract] = CID.decodeFirst(block.contract);
+      block.contract = contract;
+      let [asset] = CID.decodeFirst(block.asset);
+      block.asset = asset;
+    }
+    block.data = data;
+    return block as BaseBlock;
+  }
+  static async insert(block: BaseBlock) {
+    // TODO: verify root, seq, cid, hash and signature
+    await db?.blockstore?.put(
+      block.cid,
+      Encoder.encode({
+        root: block.root,
+        parent: block.parent,
+        seq: block.seq,
+        block_type: block.block_type,
+        data: block.data,
+        hash: block.hash,
+        sig: block.sig,
+      }),
+    );
   }
   static async create(
     parent: BaseBlock | null,
