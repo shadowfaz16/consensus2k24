@@ -104,10 +104,7 @@ const BurnNFT = ({
       const { transactionHash } = await sendTransaction(transaction);
       setStateHash(transactionHash);
       console.log("Transaction Hash call: ", transactionHash);
-      setTimeout(() => {
-        HashInfo(transactionHash);
-        console.log("fist call done")
-      }, 25000);
+     HashInfo(transactionHash);
   };
 
   useEffect(() => {
