@@ -53,7 +53,7 @@ export class ChainStore {
   static async init(blockstore: IDBBlockstore) {
     let self = new ChainStore();
     self.blockstore = blockstore;
-    const metadata = indexedDB.open("metadata", 1);
+    const metadata = indexedDB.open("metadata", 2);
     self.metadata = await new Promise((resolve, reject) => {
       metadata.onerror = (event) => {
         reject(`Database error: ${metadata.error}`);
@@ -70,6 +70,9 @@ export class ChainStore {
         }
         if (!self.metadata.objectStoreNames.contains("keys")) {
           self.metadata.createObjectStore("keys", { keyPath: "id" });
+        }
+        if (!self.metadata.objectStoreNames.contains("child")) {
+          self.metadata.createObjectStore("child", { keyPath: "parent" });
         }
       };
     });
@@ -213,6 +216,9 @@ export class ChainStore {
       roots.push(block.cid);
       await this.putRoots(roots);
     }
+    if (block.parent != null) {
+      await this.putChild(block.parent, block.cid);
+    }
     return block;
   }
   static async get(address: CID): Promise<BaseBlock | undefined> {
@@ -234,5 +240,59 @@ export class ChainStore {
     signed.cid = (await cid(new Uint8Array(bytes))) as CID<unknown, 113, 18, 1>;
     let block = signed as BaseBlock;
     return block;
+  }
+  static async putChild(parent: CID, child: CID) {
+    let operation = db?.metadata
+      ?.transaction("child", "readwrite")
+      .objectStore("child")
+      .put({ parent: parent.toString(), child: child.bytes });
+    if (!operation) {
+      throw new Error("no metadata db");
+    }
+    return await new Promise((resolve, reject) => {
+      operation.onsuccess = () => {
+        resolve(null);
+      };
+
+      operation.onerror = () => {
+        reject(`Add data error: ${operation.error}`);
+      };
+    });
+  }
+  static async child(parent: CID): Promise<BaseBlock | undefined> {
+    let operation = db?.metadata
+      ?.transaction("child")
+      .objectStore("child")
+      .get(parent.toString());
+    if (!operation) {
+      throw new Error("no metadata db");
+    }
+    let result = (await new Promise((resolve, reject) => {
+      operation.onsuccess = () => {
+        if (operation.result == null) {
+          resolve(undefined);
+        } else {
+          resolve(
+            operation.result as {
+              child: Uint8Array;
+            },
+          );
+        }
+      };
+
+      operation.onerror = (event) => {
+        const error = (event.target as IDBRequest).error;
+        reject(error);
+      };
+    })) as
+      | {
+          child: Uint8Array;
+        }
+      | undefined;
+    if (result == undefined) {
+      return result;
+    }
+    let [child] = CID.decodeFirst(result.child);
+    return await this.get(child);
   }
 }
