@@ -24,6 +24,10 @@ export default function Connectbutton() {
       {
         id: 31,
         rpc: "31.rpc.thirdweb.com",
+      },
+      {
+        id: 11155111,
+        rpc: "11155111.rpc.thirdweb.com",
       }
     ]
       }

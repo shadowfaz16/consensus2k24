@@ -12,7 +12,7 @@ import Link from "next/link";
 const Hero = () => {
   return (
     <>
-      <div className="container mx-auto flex items-center justify-between pb-20 pt-24">
+      <div className="container mx-auto flex flex-col md:flex-row items-center justify-between pb-20 pt-24">
         <div className="space-y-8">
           <div className="flex items-center space-x-4 rounded bg-bg-300 p-1 md:w-3/5 shadow shadow-primary-200">
             <div className="rounded bg-primary-200 px-3">
@@ -49,7 +49,7 @@ const Hero = () => {
           </div>
         </div>
         <div>
-          <div className="w-[500px] h-[500px] bg-gray-400 animate-pulse rounded-lg" />
+          <div className="md:w-[500px] md:h-[500px] bg-gray-400 animate-pulse rounded-lg" />
           {/* <img
             src="placeholder.png"
             alt="github-actions"

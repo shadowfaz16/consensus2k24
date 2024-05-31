@@ -9,8 +9,8 @@ const OffChainNFTs = () => {
       try {
         const client = new CovalentClient("cqt_rQJQcxMbk6yHpHYCRhVcXV4kvfwd");
         const resp = await client.NftService.getNftsForAddress(
-          "rsk-testnet",
-          "0x33Ac025056F7936b55cDA9B4eF0397648c5F0615",
+          "eth-sepolia",
+          "0xe3A29CbE78E0aF6664C6403fE47c7f8848CAe73e",
           { withUncached: true }
         );
 

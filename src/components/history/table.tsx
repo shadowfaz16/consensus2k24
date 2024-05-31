@@ -1,4 +1,6 @@
 import { Badge } from "@/components/ui/badge"
+import { CovalentClient } from "@covalenthq/client-sdk";
+
 import {
   Card,
   CardContent,
@@ -16,7 +18,18 @@ import {
 } from "@/components/ui/table"
 
 export default function Component() {
+
+  const ApiServices = async () => {
+    const client = new CovalentClient("cqt_rQJQcxMbk6yHpHYCRhVcXV4kvfwd");
+    const resp = await client.NftService.getNftTransactionsForContractTokenId("eth-sepolia","0xEF267Bbd18e11e703D054a01ded08b697029cc19","0", {"noSpam": true});
+    console.log("tx history for token :", resp.data.items);
+}
+
   return (
+    <>
+    <button onClick={ApiServices}
+    className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+    >Fetch NFTs</button>
     <Card>
       <CardHeader className="px-7">
         <CardTitle>Txn History</CardTitle>
@@ -164,5 +177,6 @@ export default function Component() {
         </Table>
       </CardContent>
     </Card>
+    </>
   )
 }

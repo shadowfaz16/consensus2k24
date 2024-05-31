@@ -17,46 +17,12 @@ const Profile = () => {
   const { loading, peerId, privateKey, publicKey, peerNumber } = useNetwork();
   const [showQr, setShowQr] = React.useState(false);
   const [blocks, setBlocks] = React.useState<BaseBlock[]>([]);
-
-  // const handleInitializeChainStore = async () => {
-  //   console.log("Button clicked, initializing ChainStore...");
-  //   try {
-  //     await ChainStore.init();
-  //     const private_key = privateKey;
-  //     const key = publicKey;
-
-  //     console.log("Private Key in function:", private_key);
-  //     console.log("Public Key in function:", key);
-
-  //     if (!private_key || !key) {
-  //       console.error("Public or private key is missing.");
-  //       return;
-  //     }
-
-  //     // Check if the key has the sign method
-  //     if (typeof key.sign !== 'function') {
-  //       console.error("Public key does not have a sign method.");
-  //       return;
-  //     }
-
-  //     const block1 = await ChainStore.create(null, { key }, private_key);
-  //     const block2 = await ChainStore.create(block1, { key }, private_key);
-  //     const block3 = await ChainStore.get(block1.cid);
-  //     const block4 = await ChainStore.get(block2.cid);
-
-  //     setBlocks([block1, block2, block3!, block4!]);
-  //     console.log("Blocks:", [block1, block2, block3, block4]);
-  //   } catch (error) {
-  //     console.error("Error initializing ChainStore:", error);
-  //   }
-  // };
-
   const { ethers } = require("ethers");
+  let userGeneratedWallet;
 
   const handleInitializeChainStore = async () => {
     console.log("Button clicked, initializing ChainStore...");
     try {
-      await ChainStore.init();
       const private_key = await libp2pKeys.unmarshalPrivateKey(privateKey);
       const key = await libp2pKeys.unmarshalPublicKey(publicKey);
 
@@ -69,12 +35,9 @@ const Profile = () => {
       }
 
       const block1 = await ChainStore.create(null, { key }, private_key);
-      const block2 = await ChainStore.create(block1, { key }, private_key);
-      const block3 = await ChainStore.get(block1.cid);
-      const block4 = await ChainStore.get(block2.cid);
 
-      setBlocks([block1, block2, block3!, block4!]);
-      console.log("Blocks:", [block1, block2, block3, block4]);
+      setBlocks([block1]);
+      console.log("Blocks:", [block1]);
       console.log("Block1 digest: ", block1.cid.multihash.digest);
 
       // Extract the digest from block1.cid.multihash.digest
@@ -86,6 +49,7 @@ const Profile = () => {
 
       // Convert to a checksummed Ethereum address
       const checksumAddress = ethers.utils.getAddress(addressHex);
+      userGeneratedWallet = checksumAddress;
 
       console.log("Generated Ethereum Address:", checksumAddress);
     } catch (error) {
@@ -160,8 +124,8 @@ const Profile = () => {
         <div className="flex flex-col md:flex-row md:gap-6">
           <FetchNfts />
           <OffChainNFTs />
-          <SendNFT />
         </div>
+          <SendNFT />
       </div>
       <div className="max-w-7xl mx-auto w-full">
         <Table />

@@ -33,13 +33,13 @@ const useNetwork = () => {
         console.log("network string:", peerIdString);
         console.log("private key bytes:", privateKeyBytes);
         console.log("public key bytes :", publicKeyBytes);
-        console.log("connected peers: ", network.libp2p.peerStore.store.datastore.data.length);
-        console.log("connected peer store: ", network.libp2p.peerStore.store.datastore);
-        console.log("connected peer store data: ", network.libp2p.peerStore.store.datastore.data.size);
+        // console.log("connected peers: ", network.libp2p.peerStore.store.datastore.data.length);
+        // console.log("connected peer store: ", network.libp2p.peerStore.store.datastore);
+        // console.log("connected peer store data: ", network.libp2p.peerStore.store.datastore.data.size);
 
         setPeerId(peerIdString);
         setKeys(privateKeyBytes, publicKeyBytes);
-        setPeerNumber(network.libp2p.peerStore.store.datastore.data.size);
+        // setPeerNumber(network.libp2p.peerStore.store.datastore.data.size);
       };
 
       initializeNetwork();

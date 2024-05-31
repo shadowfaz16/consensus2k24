@@ -11,7 +11,7 @@ const FetchNfts = () => {
       try {
         const client = new CovalentClient("cqt_rQJQcxMbk6yHpHYCRhVcXV4kvfwd");
         const resp = await client.NftService.getNftsForAddress(
-          "rsk-testnet",
+          "eth-sepolia",
           "0x68a7D0971d886Cf5CdB4fDd63198B695293e5E51",
           { withUncached: true }
         );
