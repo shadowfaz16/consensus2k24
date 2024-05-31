@@ -190,9 +190,9 @@ const BurnNFT = ({
         >
           <FaTimes />
         </button>
-        <h1 className="font-medium">Burn your NFT</h1>
+        <h1 className="font-medium">Migrate your NFT</h1>
         <p className="text-sm">
-          Burn your NFT and store it in your private network
+        Migrate your NFT and store it in your private network
         </p>
         {/* <p>Contract address: {contract_address}</p>
         <p>Token Id: {token_id}</p>
@@ -202,10 +202,10 @@ const BurnNFT = ({
           className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
           disabled={isPending}
         >
-          {isPending && "Burning..."}
-          {isSuccess && !transactionInfo && "Burning..."}
+          {isPending && "Migrating..."}
+          {isSuccess && !transactionInfo && "Migrating..."}
           {isSuccess && transactionInfo && !allSuccess && "Creating private block"}
-          {!isPending && !isSuccess && !error && "Burn"}
+          {!isPending && !isSuccess && !error && "Migrate"}
           {isError && "Error"}
           {allSuccess && "New block has been minted!"}
         </button>

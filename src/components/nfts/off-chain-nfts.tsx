@@ -68,7 +68,7 @@ const FetchNfts = () => {
       <div>
         <h1 className="font-medium text-lg">Off chain assets</h1>
         <p className="text-sm text-gray-500">
-          Here are the assets you&apos;ve burned and stored in your private network
+          Here are the assets you&apos;ve exported and stored in your private network
         </p>
       </div>
       {nftData ? (
