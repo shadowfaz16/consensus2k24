@@ -34,6 +34,14 @@ const QR = () => {
           placeholder="Enter wallet address"
           className="border border-gray-300 p-2 rounded-md mb-4"
         />
+        <button
+          onClick={() => navigator.clipboard.writeText(scannedValue).then(() => {
+            // alert("Copied to clipboard");
+          })}
+          className="bg-emerald-500 text-white px-4 py-2 rounded-md"
+        >
+          Action
+        </button>
       </div>
       <div className="">
         {scan ? <QRCodeScanner onScan={handleScan} scannedValue={scannedValue} /> : null}
