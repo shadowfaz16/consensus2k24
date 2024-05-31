@@ -70,7 +70,7 @@ type SendRequest = {
   sender_address: CID;
   receiver_address: CID;
   contract: CID;
-  asset: CID;
+  asset: number;
 };
 type SendResponse = {
   result: "Accept" | "Decline";
@@ -79,6 +79,7 @@ type SendResponse = {
 export class Network {
   private _libp2p: Libp2p | null = null;
   private _helia: Helia | null = null;
+  /*
   async sendHandler(data: IncomingStreamData) {
     const stream = lpStream(data.stream);
     let msg = (await stream.read()).subarray();
@@ -185,6 +186,7 @@ export class Network {
     }
     return cid;
   }
+  */
   get libp2p(): Libp2p {
     if (this._libp2p == null) {
       throw new Error("Network not initalized");
@@ -197,6 +199,7 @@ export class Network {
     }
     return this._helia;
   }
+  /*
   async addFile(bytes: Uint8Array): Promise<CID> {
     const fs = unixfs(this.helia);
     const cid = await fs.addBytes(bytes);
@@ -214,7 +217,8 @@ export class Network {
     }
     return result;
   }
-  async exportAsset(asset: CID) {
+  */
+  async exportAsset(asset: number) {
     let pkey = await generateKeyPair(Ed25519);
     let data = {
       pkey,

@@ -25,19 +25,19 @@ export type ImportAsset = {
   tx_hash: string;
   sender_address: string;
   to_address: string;
-  asset: CID;
+  asset: number;
 };
 export type SendAsset = {
   type: "Send";
   sender_address: CID;
   receiver_address: CID;
-  asset: CID;
+  asset: number;
 };
 export type AcceptAsset = {
   type: "Accept";
   sender_address: CID;
   receiver_address: CID;
-  asset: CID;
+  asset: number;
 };
 export type BaseBlock = {
   root: CID<unknown, 113, 18, 1> | null;
@@ -88,8 +88,8 @@ export class ChainStore {
     });
     db = self;
   }
-  static async activeAssets(): Promise<CID[]> {
-    let assets: CID[] = [];
+  static async activeAssets(): Promise<number[]> {
+    let assets: number[] = [];
     let parent = await this.genesis();
     if (parent == null) {
       return assets;
@@ -264,7 +264,7 @@ export class ChainStore {
         tx_hash: block.data.tx_hash,
         sender_address: block.data.sender_address,
         to_address: block.data.to_address,
-        asset: block.data.asset.bytes,
+        asset: block.data.asset,
       });
     } else if (block.data.type === "Accept") {
       serializedData = Encoder.encode({
@@ -272,7 +272,7 @@ export class ChainStore {
         sender_address: block.data.sender_address.bytes,
         receiver_address: block.data.receiver_address.bytes,
         contract: block.data.contract.bytes,
-        asset: block.data.asset.bytes,
+        asset: block.data.asset,
       });
     } else if (block.data.type === "Send") {
       serializedData = Encoder.encode({
@@ -280,7 +280,7 @@ export class ChainStore {
         sender_address: block.data.sender_address.bytes,
         receiver_address: block.data.receiver_address.bytes,
         contract: block.data.contract.bytes,
-        asset: block.data.asset.bytes,
+        asset: block.data.asset,
       });
     }
     throw new Error("unexpected blocktype");
@@ -302,9 +302,6 @@ export class ChainStore {
     let data = await Decoder.decodeFirst(block.data);
     if (block.data_type === "Genesis") {
       data.key = await unmarshalPrivateKey(data.key);
-    } else if (block.data_type === "Import") {
-      let [cid] = CID.decodeFirst(block.cid);
-      data.asset.cid = cid;
     } else if (block.data_type === "Accept") {
       let [sender_address] = CID.decodeFirst(block.sender_address);
       block.sender_address = sender_address;
@@ -312,8 +309,6 @@ export class ChainStore {
       block.receiver_address = receiver_address;
       let [contract] = CID.decodeFirst(block.contract);
       block.contract = contract;
-      let [asset] = CID.decodeFirst(block.asset);
-      block.asset = asset;
     } else if (block.data_type === "Send") {
       let [sender_address] = CID.decodeFirst(block.sender_address);
       block.sender_address = sender_address;
@@ -321,8 +316,6 @@ export class ChainStore {
       block.receiver_address = receiver_address;
       let [contract] = CID.decodeFirst(block.contract);
       block.contract = contract;
-      let [asset] = CID.decodeFirst(block.asset);
-      block.asset = asset;
     }
     block.data = data;
     return block as BaseBlock;
