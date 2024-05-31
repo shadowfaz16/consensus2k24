@@ -7,10 +7,91 @@ import useNetwork from "@/hooks/useNetwork";
 import { bytesToHex, bytesToBase64 } from "@/ultils/utils";
 import Table from "@/components/history/table";
 import FetchNfts from "@/components/nfts/fetch-nfts";
+import { BaseBlock, ChainStore, GenesisBlock } from "../../network/chain";
+import { keys as libp2pKeys } from "@libp2p/crypto";
+import { ethers } from "ethers";
+import SendNFT from "@/components/nfts/send-nfts";
+import OffChainNFTs from "@/components/nfts/off-chain-nfts";
 
 const Profile = () => {
   const { loading, peerId, privateKey, publicKey, peerNumber } = useNetwork();
   const [showQr, setShowQr] = React.useState(false);
+  const [blocks, setBlocks] = React.useState<BaseBlock[]>([]);
+
+  // const handleInitializeChainStore = async () => {
+  //   console.log("Button clicked, initializing ChainStore...");
+  //   try {
+  //     await ChainStore.init();
+  //     const private_key = privateKey;
+  //     const key = publicKey;
+
+  //     console.log("Private Key in function:", private_key);
+  //     console.log("Public Key in function:", key);
+
+  //     if (!private_key || !key) {
+  //       console.error("Public or private key is missing.");
+  //       return;
+  //     }
+
+  //     // Check if the key has the sign method
+  //     if (typeof key.sign !== 'function') {
+  //       console.error("Public key does not have a sign method.");
+  //       return;
+  //     }
+
+  //     const block1 = await ChainStore.create(null, { key }, private_key);
+  //     const block2 = await ChainStore.create(block1, { key }, private_key);
+  //     const block3 = await ChainStore.get(block1.cid);
+  //     const block4 = await ChainStore.get(block2.cid);
+
+  //     setBlocks([block1, block2, block3!, block4!]);
+  //     console.log("Blocks:", [block1, block2, block3, block4]);
+  //   } catch (error) {
+  //     console.error("Error initializing ChainStore:", error);
+  //   }
+  // };
+
+  const { ethers } = require("ethers");
+
+  const handleInitializeChainStore = async () => {
+    console.log("Button clicked, initializing ChainStore...");
+    try {
+      await ChainStore.init();
+      const private_key = await libp2pKeys.unmarshalPrivateKey(privateKey);
+      const key = await libp2pKeys.unmarshalPublicKey(publicKey);
+
+      console.log("Private Key in function:", private_key);
+      console.log("Public Key in function:", key);
+
+      if (!private_key || !key) {
+        console.error("Public or private key is missing.");
+        return;
+      }
+
+      const block1 = await ChainStore.create(null, { key }, private_key);
+      const block2 = await ChainStore.create(block1, { key }, private_key);
+      const block3 = await ChainStore.get(block1.cid);
+      const block4 = await ChainStore.get(block2.cid);
+
+      setBlocks([block1, block2, block3!, block4!]);
+      console.log("Blocks:", [block1, block2, block3, block4]);
+      console.log("Block1 digest: ", block1.cid.multihash.digest);
+
+      // Extract the digest from block1.cid.multihash.digest
+      const digestArray = new Uint8Array(block1.cid.multihash.digest);
+
+      // Take the first 20 bytes of the digest to form the address
+      const addressBytes = digestArray.slice(0, 20);
+      const addressHex = ethers.utils.hexlify(addressBytes);
+
+      // Convert to a checksummed Ethereum address
+      const checksumAddress = ethers.utils.getAddress(addressHex);
+
+      console.log("Generated Ethereum Address:", checksumAddress);
+    } catch (error) {
+      console.error("Error initializing ChainStore:", error);
+    }
+  };
 
   return (
     <div className="min-h-[92dvh] flex flex-col items-center bg-gray-100 p-4 gap-4 pb-16">
@@ -76,10 +157,51 @@ const Profile = () => {
         </div>
       </div>
       <div className="max-w-7xl mx-auto w-full">
-        <FetchNfts />
+        <div className="flex flex-col md:flex-row md:gap-6">
+          <FetchNfts />
+          <OffChainNFTs />
+          <SendNFT />
+        </div>
       </div>
       <div className="max-w-7xl mx-auto w-full">
         <Table />
+      </div>
+      <div className="max-w-7xl mx-auto w-full">
+        <button
+          onClick={handleInitializeChainStore}
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+        >
+          Initialize ChainStore
+        </button>
+        {/* <div className="max-w-7xl mx-auto w-full">
+        <h2 className="text-xl font-semibold text-gray-800">Blocks</h2>
+        <pre>{JSON.stringify(blocks, null, 2)}</pre>
+      </div> */}
+        <div className="max-w-7xl mx-auto w-full mt-4">
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Blocks</h2>
+          <div className="grid grid-cols-1 md:flex items-center gap-6 md:gap-1">
+            {blocks.map((block, index) => (
+              <React.Fragment key={index}>
+                <div className="bg-white p-4 rounded-lg shadow-lg h-80 overflow-y-scroll gap-2 flex flex-col">
+                  <p className="font-medium">Block #: {block.seq}</p>
+                  <p className="font-medium text-xs">
+                    Address: {block.cid.multihash.digest}
+                  </p>
+                  <p className="font-medium text-xs">
+                    toypeof: {typeof block.cid.multihash.digest}
+                  </p>
+                  {/* <p className="font-medium">Block #: {index}</p> */}
+                  <pre className="text-sm">
+                    {JSON.stringify(block, null, 2)}
+                  </pre>
+                </div>
+                {index < blocks.length - 1 && (
+                  <hr className="border-t-2 border-gray-400 h-2 w-24 hidden md:flex" />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

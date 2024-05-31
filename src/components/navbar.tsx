@@ -26,7 +26,7 @@ const NavBar = () => {
             </div>
           </div>
           <div>
-            <h1 className="font-medium text-text-100 text-sm leading-3 mt-2">Wonderland</h1>
+            <h1 className="font-medium text-text-100 text-sm leading-3 mt-2">Amendment 0</h1>
             <h3 className="text-sm text-text-200">Equity for your data</h3>
           </div>
         </Link>

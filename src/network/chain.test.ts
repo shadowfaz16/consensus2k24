@@ -14,4 +14,5 @@ test("test", async () => {
   let block4 = await ChainStore.get(block2.cid);
   expect(block1).toEqual(block3);
   expect(block2).toEqual(block4);
+  console.log("Blockssss:", [block1, block2, block3, block4]);
 });

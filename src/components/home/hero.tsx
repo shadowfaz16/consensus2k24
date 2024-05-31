@@ -19,7 +19,7 @@ const Hero = () => {
               <span className="text-xs text-text-100">WHAT&apos;S NEW</span>
             </div>
             <p className="text-text-200">
-              Launching Wonderland for data equity
+              Transactional freedom
             </p>
           </div>
           <h1 className="text-6xl font-medium text-text-100 md:w-2/3">

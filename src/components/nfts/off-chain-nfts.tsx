@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { CovalentClient } from "@covalenthq/client-sdk";
 
-const FetchNfts = () => {
+const OffChainNFTs = () => {
   const [nftData, setNftData] = useState<[]>([]);
 
   useEffect(() => {
@@ -73,4 +73,4 @@ const FetchNfts = () => {
   );
 };
 
-export default FetchNfts;
+export default OffChainNFTs;

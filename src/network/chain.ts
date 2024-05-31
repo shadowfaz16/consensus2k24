@@ -39,11 +39,7 @@ export class ChainStore {
     }
   }
   static async create(
-<<<<<<< HEAD
-    parent: BlockView | null,
-=======
     parent: BaseBlock | null,
->>>>>>> main
     data: Data,
     key: PrivateKey,
   ): Promise<BaseBlock> {
@@ -82,13 +78,8 @@ export class ChainStore {
     await db?.blockstore?.put(address, signed);
     return block;
   }
-<<<<<<< HEAD
-  static async get(cid: CID.CID): Promise<BlockView | undefined> {
-    let bytes = await db?.blockstore?.get(cid);
-=======
   static async get(address: CID): Promise<BaseBlock | undefined> {
     let bytes = await db?.blockstore?.get(address);
->>>>>>> main
     if (bytes === undefined) {
       return undefined;
     }
