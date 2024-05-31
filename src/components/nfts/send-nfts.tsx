@@ -132,7 +132,7 @@ export default function SendNFT({
       try {
         const private_key = await ChainStore.key();
 
-        if (!private_key || !key) {
+        if (!private_key) {
           console.error("Public or private key is missing.");
           return;
         }
