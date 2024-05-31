@@ -109,7 +109,7 @@ export class Network {
     ChainStore.init(blockstore);
 
     // Enable verbose logging for debugging
-    localStorage.debug = "*";
+    localStorage.debug = "ui*";
 
     const delegatedClient = createDelegatedRoutingV1HttpApiClient(
       "https://delegated-ipfs.dev",
