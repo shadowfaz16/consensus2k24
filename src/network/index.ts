@@ -9,7 +9,11 @@ import { peerIdFromKeys } from "@libp2p/peer-id";
 import { IDBBlockstore } from "blockstore-idb";
 import { Encoder, Decoder } from "cbor-web";
 import { lpStream } from "it-length-prefixed-stream";
-import { marshalPrivateKey, unmarshalPrivateKey } from "@libp2p/crypto/keys";
+import {
+  generateKeyPair,
+  marshalPrivateKey,
+  unmarshalPrivateKey,
+} from "@libp2p/crypto/keys";
 import {
   createDelegatedRoutingV1HttpApiClient,
   DelegatedRoutingV1HttpApiClient,
@@ -29,11 +33,18 @@ import type {
   PeerId,
   IncomingStreamData,
 } from "@libp2p/interface";
+import { Ed25519 } from "@libp2p/interface";
 import { webSockets } from "@libp2p/websockets";
 import { webTransport } from "@libp2p/webtransport";
 import { webRTC, webRTCDirect } from "@libp2p/webrtc";
 import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
-import { ChainStore, GenesisBlock } from "./chain";
+import {
+  ChainStore,
+  GenesisBlock,
+  BaseBlock,
+  SendAsset,
+  AcceptAsset,
+} from "./chain";
 
 const WEBRTC_BOOTSTRAP_PEER_ID =
   "12D3KooWGahRw3ZnM4gAyd9FK75v4Bp5keFYTvkcAwhpEm28wbV3";
@@ -65,11 +76,66 @@ type SendResponse = {
   result: "Accept" | "Decline";
 };
 
+class AsyncWebSocket {
+  private socket: WebSocket;
+  private openPromise: Promise<void>;
+  private messageQueue: ((message: MessageEvent) => void)[];
+
+  constructor(url: string) {
+    this.socket = new WebSocket(url);
+    this.messageQueue = [];
+
+    this.openPromise = new Promise<void>((resolve, reject) => {
+      this.socket.addEventListener("open", () => resolve());
+      this.socket.addEventListener("error", (err) => reject(err));
+    });
+
+    this.socket.addEventListener("message", (event) => {
+      const handler = this.messageQueue.shift();
+      if (handler) {
+        handler(event);
+      }
+    });
+  }
+
+  async connect() {
+    await this.openPromise;
+  }
+
+  send(data: string | ArrayBuffer | Blob | ArrayBufferView) {
+    this.socket.send(data);
+  }
+
+  async receive(): Promise<string> {
+    return new Promise<string>((resolve) => {
+      this.messageQueue.push((event) => resolve(event.data));
+    });
+  }
+
+  close(code?: number, reason?: string) {
+    this.socket.close(code, reason);
+  }
+}
+
+(async () => {
+  await ws.connect();
+  console.log("WebSocket connected");
+
+  ws.send(JSON.stringify({ type: "greeting", message: "Hello Server!" }));
+
+  const message = await ws.receive();
+  console.log("Received:", message);
+
+  ws.close();
+})();
+
 export class Network {
   private _libp2p: Libp2p | null = null;
   private _helia: Helia | null = null;
+  private _rendevous: AsyncWebSocket | null = null;
   async sendHandler(data: IncomingStreamData) {
     const stream = lpStream(data.stream);
+    const ws = new AsyncWebSocket("wss://your-server-url");
     let msg = (await stream.read()).subarray();
     let req = (await Decoder.decodeFirst(msg)) as SendRequest;
     await this.getFile(req.asset);
@@ -202,6 +268,63 @@ export class Network {
       result = target;
     }
     return result;
+  }
+  async exportAsset(asset: CID) {
+    let pkey = await generateKeyPair(Ed25519);
+    let data = {
+      pkey,
+      blocks: [] as BaseBlock[],
+    };
+    let newchain = await ChainStore.create(
+      null,
+      { type: "Genesis", key: pkey.public },
+      pkey,
+    );
+    let genesis = (await ChainStore.genesis()) as BaseBlock | null | undefined;
+    if (genesis == null) {
+      throw new Error("");
+    }
+    data.blocks.push(genesis);
+    let transfer = await ChainStore.create(
+      newchain,
+      {
+        type: "Send",
+        sender_address: genesis.cid,
+        receiver_address: newchain.cid,
+        asset,
+      },
+      await ChainStore.key(),
+    );
+    let block = await ChainStore.child(genesis.cid);
+    while (true) {
+      if (block == null) {
+        break;
+      }
+      data.blocks.push(block);
+      block = await ChainStore.child(block.cid);
+    }
+    let send = await ChainStore.create(
+      genesis,
+      {
+        type: "Send",
+        sender_address: genesis.cid,
+        receiver_address: newchain.cid,
+        asset,
+      },
+      pkey,
+    );
+    data.blocks.push(newchain);
+    data.blocks.push(transfer);
+    let dump = JSON.stringify(data);
+    console.log(dump);
+    const blob = new Blob([dump], { type: "text/plaintext" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "provenance.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
   async init() {
     const blockstore = new IDBBlockstore("blocks");

@@ -31,14 +31,12 @@ export type SendAsset = {
   type: "Send";
   sender_address: CID;
   receiver_address: CID;
-  contract: CID;
   asset: CID;
 };
 export type AcceptAsset = {
   type: "Accept";
   sender_address: CID;
   receiver_address: CID;
-  contract: CID;
   asset: CID;
 };
 export type BaseBlock = {
@@ -105,7 +103,7 @@ export class ChainStore {
     }
     return assets;
   }
-  
+
   static async putGenesis(root: CID) {
     let operation = db?.metadata
       ?.transaction("self", "readwrite")
@@ -478,7 +476,10 @@ export class ChainStore {
     return allBlocks;
   }
 
-  private static async traverseBlocks(block: BaseBlock, allBlocks: BaseBlock[]): Promise<void> {
+  private static async traverseBlocks(
+    block: BaseBlock,
+    allBlocks: BaseBlock[],
+  ): Promise<void> {
     allBlocks.push(block);
 
     const child = await this.child(block.cid);
