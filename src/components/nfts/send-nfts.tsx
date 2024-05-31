@@ -16,6 +16,9 @@ import { FaTimes } from "react-icons/fa";
 import { CID } from "multiformats";
 import useNetwork from "@/hooks/useNetwork";
 import { keys as libp2pKeys } from "@libp2p/crypto";
+import useStore from "@/store/store";
+import { IoScanSharp } from "react-icons/io5";
+import QRCodeScanner from "../qr/QRCodeScanner";
 
 interface TransactionInfo {
   block_height: number;
@@ -46,20 +49,26 @@ const SendNFT = ({
   onTransactionSuccess,
   onClose,
 }: SendNFTProps) => {
+  const generatedUserWallet = useStore((state) => state.userGeneratedWallet);
   const wallet = useActiveAccount();
   const userWallet = wallet?.address;
   const [transactionInfo, setTransactionInfo] =
     useState<TransactionInfo | null>(null);
   const [receiver, setReceiver] = useState<string>("");
-
   const [stateHash, setStateHash] = useState<string | null>(null);
-
   const [blockHeight, setBlockHeight] = useState<number>(0);
-
   const [allSuccess, setAllSuccess] = useState<boolean>(false);
   const { privateKey, publicKey } = useNetwork();
-
+  const [scannedValue, setScannedValue] = useState("");
+  const [scan, setScan] = useState(false);
   const [cid, setCid] = useState<CID | null>(null);
+
+  const handleScan = (data: string) => {
+    setScannedValue(data);
+    navigator.clipboard.writeText(data).then(() => {
+      // alert("Copied to clipboard");
+    });
+  };
 
   const handleCidReceived = (newCid: CID) => {
     setCid(newCid);
@@ -82,62 +91,24 @@ const SendNFT = ({
     status,
     isSuccess,
     data,
-    variables
+    variables,
   } = useSendTransaction();
 
   console.log("CID FOR IMAGE: ", cid);
 
-  const call = async () => {
-      const transaction = await prepareContractCall({
-        contract,
-        method: resolveMethod("safeTransferFrom"),
-        params: [userWallet, receiver, token_id],
-      });
-      const { transactionHash } = await sendTransaction(transaction);
-      setStateHash(transactionHash);
-      console.log("Transaction Hash call: ", transactionHash);
-      setTimeout(() => {
-        HashInfo(transactionHash);
-      }, 20000);
-      console.log("fist call done")
-      setTimeout(() => {
-      createBlock();
-      }, 25000);
-      console.log("second call done")
-  };
- 
-  console.log("STATE HASH: ", stateHash);
-
-  const HashInfo = async (txHash: string) => {
-    try {
-      const client = new CovalentClient("cqt_rQJQcxMbk6yHpHYCRhVcXV4kvfwd");
-      const resp = await client.TransactionService.getTransaction(
-        "eth-sepolia",
-        txHash,
-      );
-      const { block_height, tx_hash, from_address, to_address } =
-        resp.data.items[0];
-
-        console.log("HASH INFO: ", resp.data.items[0]);
-        setBlockHeight(resp.data.items[0].block_height);
-        console.log("Block Heighttttt: ", blockHeight);
-
-      setTransactionInfo({ block_height, tx_hash, from_address, to_address });
-    } catch (error) {
-      console.error("Error fetching transaction info:", error);
-    }
-  };
-
   const createBlock = async () => {
-    if (transactionInfo?.block_height && cid) {
+    if (transactionInfo && cid) {
+      console.log("hello Will");
       try {
         const private_key = await ChainStore.key();
+
+        console.log("hello its me");
 
         if (!private_key) {
           console.error("Public or private key is missing.");
           return;
         }
-        console.log("Creating new block...")
+        console.log("Creating new block...");
         const genesis = await ChainStore.genesis();
         if (genesis == null) {
           console.error("Missing genesis block");
@@ -155,7 +126,7 @@ const SendNFT = ({
             to_address: transactionInfo.to_address,
             asset: cid,
           },
-          private_key,
+          private_key
         );
         console.log("New Block Created: ", newBlock);
       } catch (error) {
@@ -164,43 +135,45 @@ const SendNFT = ({
     }
   };
 
-  // const allFunctionsTogether = async () => {
-  //   setAllSuccess(false);
-  //   try {
-  //     await call(); // Initiates the transaction
-  //     console.log("Transaction Info Fetched Successfully!");
-  //     await createBlock();
-  //     setAllSuccess(true);
-  //     console.log("All functions executed successfully!");
-  //   } catch (error) {
-  //     console.error("Error in allFunctionsTogether:", error);
-  //   }
-  // };
-
   return (
     <ThirdwebProvider>
-      <div className="p-7 bg-white rounded-lg shadow-lg relative w-full overflow-x-scroll md:w-[50%]">
+      <div className="p-7 bg-white rounded-lg shadow-lg relative w-full overflow-x-scroll md:w-[50%] z-20"
+      onClick={() => setScan(false)}
+      >
         <button
-          onClick={()=> call}
+          onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 text-sm"
         >
           <FaTimes />
         </button>
         <h1 className="font-medium">Send NFTs</h1>
+        <p className="text-sm">
+          to another private network by typing their address or scanning their
+          QR code
+        </p>
         {/* <p>Contract address: {contract_address}</p>
         <p>Token Id: {token_id}</p>
         <p>Image url: {image_url}</p> */}
-        <input
-          type="text"
-          placeholder="Receiver Address"
-          className="mt-4 p-2 border border-gray-300 rounded w-full"
-          value={receiver}
-          onChange={(e) => setReceiver(e.target.value)}
-        />
+        <div className="flex items-center border border-gray-300 rounded-lg w-full mt-4">
+          <input
+            type="text"
+            placeholder="Receiver Address"
+            className="p-2 w-full"
+            value={scannedValue}
+            onChange={(e) => setScannedValue(e.target.value)}
+          />
+          <IoScanSharp
+            className="text-2xl text-gray-500 mx-2"
+            onClick={(e) => {
+              e.stopPropagation();
+              setScan(true);
+            }
+            }
+          />
+        </div>
         <button
-          onClick={call}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-          disabled={isPending}
+          className={`mt-4 px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50`}
+          disabled={isPending || !scannedValue}
         >
           {isPending && "Sending..."}
           {isSuccess && !transactionInfo?.block_height && "Sending..."}
@@ -208,37 +181,26 @@ const SendNFT = ({
           {!isPending && !isSuccess && !error && "Send"}
           {isError && "Error"}
         </button>
-        {
-          transactionInfo !== null && (
-        <button
-          onClick={()=> createBlock()}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded mx-4"
-        >
-          create block
-        </button> )
-        }
-        {/* <p className="mt-2">Status: {status}</p> */}
         {transactionInfo !== null && (
-          <div className="mt-4 p-4 bg-gray-100 rounded">
-            <h2 className="font-medium">Transaction Info</h2>
-            <p>Block Height: {transactionInfo?.block_height}</p>
-            <p>Transaction Hash: {transactionInfo?.tx_hash}</p>
-            <p>From Address: {transactionInfo?.from_address}</p>
-            <p>To Address: {transactionInfo?.to_address}</p>
-          </div>
+          <button
+            onClick={() => createBlock()}
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded mx-4"
+          >
+            create block
+          </button>
         )}
+        {/* <p className="mt-2">Status: {status}</p> */}
         <ImageUploader
           imageUrl={image_url as string}
           onCidReceived={handleCidReceived}
         />
-        <div>
-          {cid && (
-            <div className="mt-4">
-              <p className="text-xs">Image CID fetched correctly</p>
-            </div>
-          )}
-        </div>
+         {scan ?
+         <div className="fixed z-10 top-20 right-0 left-0 bottom-0  w-full flex justify-center">
+           <QRCodeScanner onScan={handleScan} scannedValue={scannedValue} />
+         </div>
+           : null}
       </div>
+      
     </ThirdwebProvider>
   );
 };

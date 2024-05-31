@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import {
   createThirdwebClient,
   getContract,
@@ -17,7 +17,6 @@ import { CID } from "multiformats";
 import useNetwork from "@/hooks/useNetwork";
 import { keys as libp2pKeys } from "@libp2p/crypto";
 import useStore from "@/store/store";
-
 
 interface TransactionInfo {
   block_height: number;
@@ -40,19 +39,25 @@ export const client = createThirdwebClient({
   clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID!,
 });
 
-export default function SendNFT({
+const BurnNFT = ({
   contract_address,
   token_id,
   image_url,
   isOpen,
   onTransactionSuccess,
   onClose,
-}: SendNFTProps) {
+}: SendNFTProps) => {
+  const generatedUserWallet = useStore((state) => state.userGeneratedWallet);
   const wallet = useActiveAccount();
   const userWallet = wallet?.address;
   const [transactionInfo, setTransactionInfo] =
     useState<TransactionInfo | null>(null);
   const [receiver, setReceiver] = useState<string>("");
+
+  const [stateHash, setStateHash] = useState<string | null>(null);
+
+  const [blockHeight, setBlockHeight] = useState<number>(0);
+
   const [allSuccess, setAllSuccess] = useState<boolean>(false);
   const { privateKey, publicKey } = useNetwork();
 
@@ -72,56 +77,54 @@ export default function SendNFT({
   });
 
   const {
-    mutate: sendTransaction,
+    mutateAsync: sendTransaction,
     isPending,
     isError,
     error,
     status,
     isSuccess,
     data,
+    variables
   } = useSendTransaction();
 
   console.log("CID FOR IMAGE: ", cid);
 
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout | null = null;
-    if (isSuccess && data?.transactionHash) {
-      const txHash = data.transactionHash;
-      intervalId = setInterval(async () => {
-        const result = await HashInfo(txHash);
-        if (transactionInfo?.block_height) {
-          clearInterval(intervalId as NodeJS.Timeout);
-          if (onTransactionSuccess) {
-            onTransactionSuccess(); // Call the callback function
-          }
-        }
-      }, 3000); // Poll every 5 seconds
-    }
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [isSuccess, data]); // Add isSuccess to dependency array
-
   const call = async () => {
-    const transaction = await prepareContractCall({
-      contract,
-      method: resolveMethod("safeTransferFrom"),
-      params: [userWallet, receiver, token_id],
-    });
-    sendTransaction(transaction);
+      const transaction = await prepareContractCall({
+        contract,
+        method: resolveMethod("safeTransferFrom"),
+        params: [userWallet, generatedUserWallet, token_id],
+      });
+      const { transactionHash } = await sendTransaction(transaction);
+      setStateHash(transactionHash);
+      console.log("Transaction Hash call: ", transactionHash);
+      setTimeout(() => {
+        HashInfo(transactionHash);
+        console.log("fist call done")
+      }, 25000);
   };
+
+  useEffect(() => {
+    if (transactionInfo?.block_height && cid) {
+      createBlock();
+    }
+  }, [transactionInfo, cid]);
+ 
+  console.log("STATE HASH: ", stateHash);
 
   const HashInfo = async (txHash: string) => {
     try {
       const client = new CovalentClient("cqt_rQJQcxMbk6yHpHYCRhVcXV4kvfwd");
       const resp = await client.TransactionService.getTransaction(
         "eth-sepolia",
-        txHash
+        txHash,
       );
       const { block_height, tx_hash, from_address, to_address } =
         resp.data.items[0];
+
+        console.log("HASH INFO: ", resp.data.items[0]);
+        setBlockHeight(resp.data.items[0].block_height);
+        console.log("Block Heighttttt: ", blockHeight);
 
       setTransactionInfo({ block_height, tx_hash, from_address, to_address });
     } catch (error) {
@@ -131,16 +134,25 @@ export default function SendNFT({
 
   const createBlock = async () => {
     if (transactionInfo && cid) {
+      console.log("hello Will");
       try {
-        const private_key = await libp2pKeys.unmarshalPrivateKey(privateKey);
-        const key = await libp2pKeys.unmarshalPublicKey(publicKey);
-  
-        if (!private_key || !key) {
+        const private_key = await ChainStore.key();
+
+      console.log("hello its me");
+
+        if (!private_key) {
           console.error("Public or private key is missing.");
           return;
         }
+        console.log("Creating new block...")
+        const genesis = await ChainStore.genesis();
+        if (genesis == null) {
+          console.error("Missing genesis block");
+          return;
+        }
+        console.log("almost done: ");
         const newBlock = await ChainStore.create(
-          null,
+          genesis,
           {
             type: "Import",
             chain: "RSK",
@@ -150,28 +162,28 @@ export default function SendNFT({
             to_address: transactionInfo.to_address,
             asset: cid,
           },
-          private_key
+          private_key,
         );
         console.log("New Block Created: ", newBlock);
+        setAllSuccess(true);
       } catch (error) {
         console.error("Error creating new block: ", error);
       }
     }
   };
 
-  const allFunctionsTogether = async () => {
-    setAllSuccess(false);
-    try {
-      await call();
-      await HashInfo(data?.transactionHash as string);
-      console.log("SUCCESS!!!");
-      await createBlock();
-      setAllSuccess(true);
-      console.log("All functions executed successfully!");
-    } catch (error) {
-      console.error("Error in allFunctionsTogether:", error);
-    }
-  };
+  // const allFunctionsTogether = async () => {
+  //   setAllSuccess(false);
+  //   try {
+  //     await call(); // Initiates the transaction
+  //     console.log("Transaction Info Fetched Successfully!");
+  //     await createBlock();
+  //     setAllSuccess(true);
+  //     console.log("All functions executed successfully!");
+  //   } catch (error) {
+  //     console.error("Error in allFunctionsTogether:", error);
+  //   }
+  // };
 
   return (
     <ThirdwebProvider>
@@ -182,36 +194,32 @@ export default function SendNFT({
         >
           <FaTimes />
         </button>
-        <h1 className="font-medium">Send NFTs</h1>
+        <h1 className="font-medium">Burn your NFT</h1>
+        <p className="text-sm">
+          Burn your NFT and store it in your private network
+        </p>
         {/* <p>Contract address: {contract_address}</p>
         <p>Token Id: {token_id}</p>
         <p>Image url: {image_url}</p> */}
-        <input
-          type="text"
-          placeholder="Receiver Address"
-          className="mt-4 p-2 border border-gray-300 rounded w-full"
-          value={receiver}
-          onChange={(e) => setReceiver(e.target.value)}
-        />
         <button
-          onClick={allFunctionsTogether}
+          onClick={call}
           className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
           disabled={isPending}
         >
           {isPending && "Sending..."}
-          {isSuccess && !transactionInfo?.block_height && "Sending..."}
-          {isSuccess && transactionInfo?.block_height && "Sent!"}
+          {isSuccess && !transactionInfo && "Sending..."}
+          {isSuccess && transactionInfo && !allSuccess && "Creating block"}
           {!isPending && !isSuccess && !error && "Send"}
           {isError && "Error"}
+          {allSuccess && "All done!"}
         </button>
-        <p className="mt-2">Status: {status}</p>
-        {allSuccess && transactionInfo && (
+        {transactionInfo !== null && (
           <div className="mt-4 p-4 bg-gray-100 rounded">
             <h2 className="font-medium">Transaction Info</h2>
-            <p>Block Height: {transactionInfo.block_height}</p>
-            <p>Transaction Hash: {transactionInfo.tx_hash}</p>
-            <p>From Address: {transactionInfo.from_address}</p>
-            <p>To Address: {transactionInfo.to_address}</p>
+            <p>Block Height: {transactionInfo?.block_height}</p>
+            <p>Transaction Hash: {transactionInfo?.tx_hash}</p>
+            <p>From Address: {transactionInfo?.from_address}</p>
+            <p>To Address: {transactionInfo?.to_address}</p>
           </div>
         )}
         <ImageUploader
@@ -220,16 +228,14 @@ export default function SendNFT({
         />
         <div>
           {cid && (
-            <div>
-              <h2>Image CID fetched correctly</h2>
-              {transactionInfo?.block_height && (
-                <p>Block Height: {transactionInfo.block_height}</p>
-              )}
-              {/* <p>{cid}</p> */}
+            <div className="mt-4">
+              <p className="text-xs">Image CID fetched correctly</p>
             </div>
           )}
         </div>
       </div>
     </ThirdwebProvider>
   );
-}
+};
+
+export default memo(BurnNFT);

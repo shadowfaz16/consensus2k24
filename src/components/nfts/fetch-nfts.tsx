@@ -3,6 +3,7 @@ import { CovalentClient } from "@covalenthq/client-sdk";
 import { IoMdCloudDownload } from "react-icons/io";
 import SendNFT from "./send-nfts";
 import { useActiveAccount } from "thirdweb/react";
+import BurnNft from "./burn-nft";
 
 
 const FetchNfts = () => {
@@ -110,7 +111,7 @@ const FetchNfts = () => {
                       }
                     />
                       </div>
-                  </div>
+                  </div> 
                 ))}
               </div>
             )
@@ -125,7 +126,7 @@ const FetchNfts = () => {
           fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-20
           "
         >
-          <SendNFT
+          <BurnNft
             isOpen={isSendNFTModalOpen}
             onClose={closeSendNFTModal}
             contract_address={selectedNFT?.contract_address as string}

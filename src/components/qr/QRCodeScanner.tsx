@@ -20,7 +20,7 @@ const QRCodeScanner = ({ onScan, scannedValue }: QRCodeScannerProps) => {
   };
 
   return (
-    <div className="w-48 h-48">
+    <div className="w-64 h-64">
       <QrReader
         scanDelay={300}
         onResult={(result, error) => {

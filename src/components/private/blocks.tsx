@@ -12,14 +12,16 @@ const Blocks = () => {
   const setQrString = useStore((state) => state.setQrString);
   const [blockChain, setBlockChiain] = React.useState<any[]>([]);
   const { ethers } = require("ethers");
-  
+
+  const loading = useStore((state) => state.loading);
 
   useEffect(() => {
     const fetchGenesisBlock = async () => {
+
       try {
         const genesisBlock = await ChainStore.genesis();
         const blocks = await ChainStore.roots();
-        setBlockChiain(blocks || []);
+        setBlockChiain(blocks);
         console.log("Genesis Block by Will:", genesisBlock);
         console.log("Blocks by Will:", blocks);
 
@@ -36,18 +38,25 @@ const Blocks = () => {
 
         console.log("QR Code String:", qr);
         console.log("Generated Ethereum Address:", checksumAddress);
+
         
-      } catch (error) {
+      } catch (error) { 
         console.error("Failed to fetch genesis block:", error);
+
       }
     };
 
     fetchGenesisBlock();
   }, []);
 
+  if (loading) {
+    return <div>Loading blocks...</div>;
+  }
+
+
   return (
     <div className="flex flex-col gap-6 my-2 bg-white p-7 rounded-lg shadow-lg w-full">
-      <div className="">
+      <div className="border-none ">
         <h2 className="text-xl font-semibold text-gray-800 mb-1">Blocks</h2>
         <p className="text-sm text-gray-500">
           This is the block explorer for your private chain
@@ -63,17 +72,17 @@ const Blocks = () => {
       <div className="max-w-7xl mx-auto w-full mt-4">
         <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-6 md:gap-1">
           {blockChain.map((block, index) => (
-            <React.Fragment key={index}>
+            <React.Fragment key={index}> 
               <div className="bg-white p-4 rounded-lg shadow-lg h-72 overflow-y-scroll gap-2 flex flex-col">
                 <p className="font-medium text-sm">Block #: {block.seq}</p>
                 {/* <p className="font-medium">Block #: {index}</p> */}
                 <pre className="text-xs">{JSON.stringify(block, null, 2)}</pre>
               </div>
               {index < blockChain.length - 1 && (
-                <hr className="border-t-2 border-gray-400 h-2 w-24 hidden md:flex" />
+                <hr className="border-t-2 border-gray-400 h-2 w-24 hidden md:flex" /> 
               )}
             </React.Fragment>
-          ))}
+          ))} 
         </div>
       </div>
     </div>
