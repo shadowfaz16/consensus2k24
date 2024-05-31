@@ -50,10 +50,9 @@ async function cid(bytes: Uint8Array): Promise<CID> {
 export class ChainStore {
   blockstore: IDBBlockstore | null = null;
   metadata: IDBDatabase | null = null;
-  static async init() {
+  static async init(blockstore: IDBBlockstore) {
     let self = new ChainStore();
-    const store = new IDBBlockstore("blocks");
-    await store.open();
+    self.blockstore = blockstore;
     const metadata = indexedDB.open("metadata", 1);
     self.metadata = await new Promise((resolve, reject) => {
       metadata.onerror = (event) => {
@@ -74,7 +73,6 @@ export class ChainStore {
         }
       };
     });
-    self.blockstore = store;
     db = self;
   }
   static async putRoots(roots: CID[]) {

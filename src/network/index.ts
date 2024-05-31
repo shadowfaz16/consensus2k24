@@ -1,4 +1,5 @@
 import { kadDHT, removePrivateAddressesMapper } from "@libp2p/kad-dht";
+import { IDBBlockstore } from "blockstore-idb";
 import {
   createDelegatedRoutingV1HttpApiClient,
   DelegatedRoutingV1HttpApiClient,
@@ -31,9 +32,12 @@ const BOOTSTRAP_PEER_IDS = [
   WEBTRANSPORT_BOOTSTRAP_PEER_ID,
   WEBRTC_BOOTSTRAP_PEER_ID,
 ];
+import { Helia, createHelia } from "helia";
+import { IDBDatastore } from "datastore-idb";
 
 export class Network {
   private _libp2p: Libp2p | null = null;
+  private _helia: Helia | null = null;
   get libp2p(): Libp2p {
     if (this._libp2p == null) {
       throw new Error("Network not initalized");
@@ -41,7 +45,11 @@ export class Network {
     return this._libp2p;
   }
   async init() {
-    ChainStore.init();
+    const blockstore = new IDBBlockstore("blocks");
+    const datastore = new IDBDatastore("libp2p");
+    await datastore.open();
+    await blockstore.open();
+    ChainStore.init(blockstore);
 
     // Enable verbose logging for debugging
     localStorage.debug = "ui*,libp2p*,-libp2p:connection-manager*,-*:trace";
@@ -54,7 +62,7 @@ export class Network {
       await getBootstrapMultiaddrs(delegatedClient);
 
     this._libp2p = await createLibp2p({
-      privateKey: await ChainStore.key(),
+      datastore,
       addresses: {
         listen: [
           // Listen for webRTC connection
@@ -113,6 +121,11 @@ export class Network {
           peerInfoMapper: removePrivateAddressesMapper,
         }),
       },
+    });
+    this._helia = await createHelia({
+      datastore,
+      blockstore,
+      libp2p: this._libp2p,
     });
   }
 }
