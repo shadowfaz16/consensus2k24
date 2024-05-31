@@ -21,6 +21,7 @@ import { webSockets } from "@libp2p/websockets";
 import { webTransport } from "@libp2p/webtransport";
 import { webRTC, webRTCDirect } from "@libp2p/webrtc";
 import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
+import { ChainStore } from "./chain";
 
 const WEBRTC_BOOTSTRAP_PEER_ID =
   "12D3KooWGahRw3ZnM4gAyd9FK75v4Bp5keFYTvkcAwhpEm28wbV3";
@@ -40,6 +41,8 @@ export class Network {
     return this._libp2p;
   }
   async init() {
+    ChainStore.init();
+
     // Enable verbose logging for debugging
     localStorage.debug = "ui*,libp2p*,-libp2p:connection-manager*,-*:trace";
 
@@ -51,6 +54,7 @@ export class Network {
       await getBootstrapMultiaddrs(delegatedClient);
 
     this._libp2p = await createLibp2p({
+      privateKey: await ChainStore.key(),
       addresses: {
         listen: [
           // Listen for webRTC connection
