@@ -1,3 +1,5 @@
+import { generateKeyPair, Ed25519PrivateKey } from "@libp2p/crypto/keys";
+import { Ed25519 } from "@libp2p/interface";
 import { IDBBlockstore } from "blockstore-idb";
 import { CID, MultihashDigest } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
@@ -48,7 +50,7 @@ export class ChainStore {
           self.metadata.createObjectStore("roots", { keyPath: "id" });
         }
         if (!self.metadata.objectStoreNames.contains("keys")) {
-          self.metadata.createObjectStore("keys", { keyPath: "key" });
+          self.metadata.createObjectStore("keys", { keyPath: "id" });
         }
       };
     });
@@ -98,6 +100,52 @@ export class ChainStore {
       let [cid] = CID.decodeFirst(root);
       return cid;
     });
+  }
+  static async putKey(key: PrivateKey) {
+    let operation = db?.metadata
+      ?.transaction("keys", "readwrite")
+      .objectStore("keys")
+      .put({ id: "key", key });
+    if (!operation) {
+      throw new Error("no metadata db");
+    }
+    return await new Promise((resolve, reject) => {
+      operation.onsuccess = () => {
+        resolve(null);
+      };
+
+      operation.onerror = () => {
+        reject(`Add data error: ${operation.error}`);
+      };
+    });
+  }
+  static async key(): Promise<PrivateKey> {
+    let operation = db?.metadata
+      ?.transaction("keys")
+      .objectStore("keys")
+      .get("key");
+    if (!operation) {
+      throw new Error("no metadata db");
+    }
+    let result = (await new Promise((resolve, reject) => {
+      operation.onsuccess = () => {
+        if (operation.result == null) {
+          resolve(null);
+        } else {
+          let key = operation.result.key;
+          resolve(new Ed25519PrivateKey(key._key, key._publicKey));
+        }
+      };
+
+      operation.onerror = () => {
+        reject();
+      };
+    })) as PrivateKey | null;
+    if (result == null) {
+      result = await generateKeyPair(Ed25519);
+      this.putKey(result);
+    }
+    return result;
   }
   static ready() {
     if (db == null) {
@@ -166,6 +214,7 @@ export class ChainStore {
       signed.parent = parent;
     }
     signed.cid = (await cid(new Uint8Array(bytes))) as CID<unknown, 113, 18, 1>;
-    return signed;
+    let block = signed as BaseBlock;
+    return block;
   }
 }
