@@ -17,7 +17,6 @@ import { CID } from "multiformats";
 import useNetwork from "@/hooks/useNetwork";
 import { keys as libp2pKeys } from "@libp2p/crypto";
 
-
 interface TransactionInfo {
   block_height: number;
   tx_hash: string;
@@ -117,7 +116,7 @@ export default function SendNFT({
       const client = new CovalentClient("cqt_rQJQcxMbk6yHpHYCRhVcXV4kvfwd");
       const resp = await client.TransactionService.getTransaction(
         "eth-sepolia",
-        txHash
+        txHash,
       );
       const { block_height, tx_hash, from_address, to_address } =
         resp.data.items[0];
@@ -131,15 +130,19 @@ export default function SendNFT({
   const createBlock = async () => {
     if (transactionInfo && cid) {
       try {
-        const private_key = await libp2pKeys.unmarshalPrivateKey(privateKey);
-        const key = await libp2pKeys.unmarshalPublicKey(publicKey);
-  
+        const private_key = await ChainStore.key();
+
         if (!private_key || !key) {
           console.error("Public or private key is missing.");
           return;
         }
+        const genesis = await ChainStore.genesis();
+        if (genesis == null) {
+          console.error("Missing genesis block");
+          return;
+        }
         const newBlock = await ChainStore.create(
-          null,
+          genesis,
           {
             type: "Import",
             chain: "RSK",
@@ -149,7 +152,7 @@ export default function SendNFT({
             to_address: transactionInfo.to_address,
             asset: cid,
           },
-          private_key
+          private_key,
         );
         console.log("New Block Created: ", newBlock);
       } catch (error) {

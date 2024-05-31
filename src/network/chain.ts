@@ -62,7 +62,7 @@ export class ChainStore {
   static async init(blockstore: IDBBlockstore) {
     let self = new ChainStore();
     self.blockstore = blockstore;
-    const metadata = indexedDB.open("metadata", 3);
+    const metadata = indexedDB.open("metadata", 4);
     self.metadata = await new Promise((resolve, reject) => {
       metadata.onerror = (event) => {
         reject(`Database error: ${metadata.error}`);
