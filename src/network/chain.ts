@@ -62,7 +62,7 @@ export class ChainStore {
   static async init(blockstore: IDBBlockstore) {
     let self = new ChainStore();
     self.blockstore = blockstore;
-    const metadata = indexedDB.open("metadata", 2);
+    const metadata = indexedDB.open("metadata", 3);
     self.metadata = await new Promise((resolve, reject) => {
       metadata.onerror = (event) => {
         reject(`Database error: ${metadata.error}`);
@@ -83,9 +83,61 @@ export class ChainStore {
         if (!self.metadata.objectStoreNames.contains("child")) {
           self.metadata.createObjectStore("child", { keyPath: "parent" });
         }
+        if (!self.metadata.objectStoreNames.contains("self")) {
+          self.metadata.createObjectStore("self", { keyPath: "id" });
+        }
       };
     });
     db = self;
+  }
+  static async putGenesis(root: CID) {
+    let operation = db?.metadata
+      ?.transaction("self", "readwrite")
+      .objectStore("self")
+      .put({ id: "genesis", root: root.bytes });
+    if (!operation) {
+      throw new Error("no metadata db");
+    }
+    return await new Promise((resolve, reject) => {
+      operation.onsuccess = () => {
+        resolve(null);
+      };
+
+      operation.onerror = () => {
+        reject(`Add data error: ${operation.error}`);
+      };
+    });
+  }
+  static async genesis(): Promise<BaseBlock | null> {
+    let operation = db?.metadata
+      ?.transaction("self")
+      .objectStore("self")
+      .get("genesis");
+    if (!operation) {
+      throw new Error("no metadata db");
+    }
+    let result = (await new Promise((resolve, reject) => {
+      operation.onsuccess = () => {
+        if (operation.result == null) {
+          resolve(null);
+        } else {
+          resolve(operation.result.root as Uint8Array);
+        }
+      };
+
+      operation.onerror = () => {
+        reject();
+      };
+    })) as Uint8Array | null;
+    if (result == null) {
+      return null;
+    }
+    let [cid] = CID.decodeFirst(result);
+    let block = await this.get(cid);
+    if (block == null) {
+      throw new Error("missing genesis block");
+    }
+    return block;
   }
   static async putRoots(roots: CID[]) {
     let operation = db?.metadata
@@ -135,7 +187,7 @@ export class ChainStore {
     let operation = db?.metadata
       ?.transaction("keys", "readwrite")
       .objectStore("keys")
-      .put({ id: "key", key });
+      .put({ id: "key", key: marshalPrivateKey(key) });
     if (!operation) {
       throw new Error("no metadata db");
     }
@@ -163,7 +215,7 @@ export class ChainStore {
           resolve(null);
         } else {
           let key = operation.result.key;
-          resolve(new Ed25519PrivateKey(key._key, key._publicKey));
+          resolve(unmarshalPrivateKey(key));
         }
       };
 

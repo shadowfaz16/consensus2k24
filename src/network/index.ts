@@ -1,8 +1,15 @@
-import { kadDHT, removePrivateAddressesMapper } from "@libp2p/kad-dht";
+import {
+  KadDHT,
+  kadDHT,
+  removePrivateAddressesMapper,
+  EventTypes,
+  ProviderEvent,
+} from "@libp2p/kad-dht";
+import { peerIdFromKeys } from "@libp2p/peer-id";
 import { IDBBlockstore } from "blockstore-idb";
 import { Encoder, Decoder } from "cbor-web";
-import { CID } from "multiformats";
 import { lpStream } from "it-length-prefixed-stream";
+import { marshalPrivateKey, unmarshalPrivateKey } from "@libp2p/crypto/keys";
 import {
   createDelegatedRoutingV1HttpApiClient,
   DelegatedRoutingV1HttpApiClient,
@@ -26,7 +33,7 @@ import { webSockets } from "@libp2p/websockets";
 import { webTransport } from "@libp2p/webtransport";
 import { webRTC, webRTCDirect } from "@libp2p/webrtc";
 import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
-import { ChainStore } from "./chain";
+import { ChainStore, GenesisBlock } from "./chain";
 
 const WEBRTC_BOOTSTRAP_PEER_ID =
   "12D3KooWGahRw3ZnM4gAyd9FK75v4Bp5keFYTvkcAwhpEm28wbV3";
@@ -44,36 +51,128 @@ import { CID } from "multiformats";
 const SYNC_PROTOCOL = "/amendment-zero/sync/1";
 type SyncRequest = {
   root: CID;
-  head: CID;
+  head: CID | null;
+};
+
+const SEND_PROTOCOL = "/amendment-zero/send/1";
+type SendRequest = {
+  sender_address: CID;
+  receiver_address: CID;
+  contract: CID;
+  asset: CID;
+};
+type SendResponse = {
+  result: "Accept" | "Decline";
 };
 
 export class Network {
   private _libp2p: Libp2p | null = null;
   private _helia: Helia | null = null;
+  async sendHandler(data: IncomingStreamData) {
+    const stream = lpStream(data.stream);
+    let msg = (await stream.read()).subarray();
+    let req = (await Decoder.decodeFirst(msg)) as SendRequest;
+    await this.getFile(req.asset);
+    let parent = await ChainStore.get(req.receiver_address);
+    if (parent == undefined) {
+      data.stream.abort(Error("Invalid Receiver Address"));
+      return;
+    }
+    let child = await ChainStore.child(parent.cid);
+    while (child) {
+      parent = child;
+      child = await ChainStore.child(parent.cid);
+    }
+    let key_bytes = this.libp2p.peerId.privateKey;
+    if (key_bytes == undefined) {
+      throw new Error("No private key");
+    }
+    let key = await unmarshalPrivateKey(key_bytes);
+    ChainStore.create(
+      parent,
+      {
+        type: "Accept",
+        ...req,
+      },
+      key,
+    );
+  }
+  async send(sender: CID, receiver: CID, contract: CID, asset: CID) {
+    let req = Encoder.encode({
+      sender: sender.bytes,
+      receiver: receiver.bytes,
+      contract: contract.bytes,
+      asset: asset.bytes,
+    });
+    let head = this.syncAll(receiver, null);
+    if (head == null) {
+      throw new Error("failed to sync chain");
+    }
+    let root = await ChainStore.get(receiver);
+    if (root == null) {
+      throw new Error("failed to sync chain");
+    }
+    let genesis = root.data as GenesisBlock;
+    let key = genesis.key;
+    let peer = await peerIdFromKeys(marshalPrivateKey(key));
+    const stream = lpStream(
+      await this.libp2p.dialProtocol(peer, SYNC_PROTOCOL),
+    );
+    stream.write(req);
+    let msg = (await stream.read()).subarray();
+    let resp = (await Decoder.decodeFirst(msg)) as SendResponse;
+    return resp.result;
+  }
   async syncHandler(data: IncomingStreamData) {
     const stream = lpStream(data.stream);
     let msg = (await stream.read()).subarray();
     let req = (await Decoder.decodeFirst(msg)) as SyncRequest;
     let prev = req.head;
+    if (prev == null) {
+      let block = await ChainStore.get(req.root);
+      if (block == null) {
+        return;
+      }
+      await stream.write(ChainStore.serialize(block));
+      prev = block.cid;
+    }
     let next = await ChainStore.child(prev);
     while (next) {
       prev = next.cid;
       await stream.write(ChainStore.serialize(next));
     }
   }
-  async sync(peer: PeerId, root: CID, head: CID) {
+  async syncAll(root: CID, head: CID | null): Promise<CID | null> {
+    let cid = head;
+    let dht = this.libp2p.services.dht as KadDHT;
+    for await (const event of dht.findProviders(root)) {
+      if (event.type != EventTypes.PROVIDER) {
+        continue;
+      }
+      let provider_event = event as ProviderEvent;
+      for (let provider of provider_event.providers) {
+        cid = await this.sync(provider.id, root, cid);
+      }
+    }
+    return cid;
+  }
+  async sync(peer: PeerId, root: CID, head: CID | null): Promise<CID | null> {
     let req = Encoder.encode({
       root: root.bytes,
-      head: head.bytes,
+      head: head?.bytes,
     });
     const stream = lpStream(
       await this.libp2p.dialProtocol(peer, SYNC_PROTOCOL),
     );
     stream.write(req);
     let next = (await stream.read()).subarray();
+    let cid = head;
     while (next.length > 0) {
-      let block = ChainStore.deserialize(next);
+      let block = await ChainStore.deserialize(next);
+      ChainStore.insert(block);
+      cid = block.cid;
     }
+    return cid;
   }
   get libp2p(): Libp2p {
     if (this._libp2p == null) {
@@ -109,7 +208,7 @@ export class Network {
     const datastore = new IDBDatastore("libp2p");
     await datastore.open();
     await blockstore.open();
-    ChainStore.init(blockstore);
+    await ChainStore.init(blockstore);
 
     // Enable verbose logging for debugging
     localStorage.debug = "ui*";
@@ -121,7 +220,20 @@ export class Network {
     const { bootstrapAddrs, relayListenAddrs } =
       await getBootstrapMultiaddrs(delegatedClient);
 
+    let key = await ChainStore.key();
+    let peerId = await peerIdFromKeys(key.public.bytes, key.bytes);
+
+    if ((await ChainStore.genesis()) == null) {
+      let block = await ChainStore.create(
+        null,
+        { type: "Genesis", key: key.public },
+        key,
+      );
+      await ChainStore.putGenesis(block.cid);
+    }
+
     this._libp2p = await createLibp2p({
+      peerId,
       datastore,
       addresses: {
         listen: [
@@ -191,7 +303,6 @@ export class Network {
       await this._libp2p.start();
     }
     await this._helia.start();
-    console.log("started");
   }
 }
 
