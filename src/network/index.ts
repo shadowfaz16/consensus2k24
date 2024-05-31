@@ -52,8 +52,7 @@ export class Network {
   async syncHandler(data: IncomingStreamData) {
     const stream = lpStream(data.stream);
     let msg = (await stream.read()).subarray();
-    // TODO handle proper parsing
-    let req = JSON.parse(new TextDecoder().decode(msg)) as SyncRequest;
+    let req = (await Decoder.decodeFirst(msg)) as SyncRequest;
     let prev = req.head;
     let next = await ChainStore.child(prev);
     while (next) {
